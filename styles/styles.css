@@ -1,0 +1,1375 @@
+@media (max-width: 480px) {
+    .window-group-member:not(:first-child) {
+        margin-left:0px !important;
+    }
+
+    .sidebar {
+        position:inherit !important;
+        text-align: center !important;
+        margin-left:auto !important;
+        margin-right:auto !important;
+    }
+
+    .sidebar-content {
+        margin-top:0px !important;
+    }
+
+    #main {
+        margin-top:0 !important;
+    }
+
+    #main-admin {
+        width:300px !important;
+    }
+
+    #console-window {
+        margin-top:25px !important;
+    }
+
+    .stats-section {
+        display:block !important;
+        margin-left:auto !important;
+        margin-right:auto !important;
+
+    }
+
+    #infoToolTip {
+        width:250px !important;
+        left:-20% !important;
+    }
+
+    #manageEmotesChannelSelect {
+        margin-top:25px !important;
+    }
+
+    #adminManageEmotes {
+        margin-top:25px !important;
+    }
+
+    .window-group-member:not(:first-child) {
+        margin-top:25px !important;
+    }
+
+    .window {
+        width:295px !important;
+    }
+  }
+
+@media (max-width: 1024px) {
+
+}
+
+body {
+    background:#c0c0c0;
+}
+
+ul {
+    padding:0;
+    list-style-type:none;
+}
+
+li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+a {
+    color:purple;
+}
+
+th {
+    text-align:center;
+}
+
+input {
+    width:fit-content;
+    color:black !important;
+    font-weight:normal !important;
+    text-decoration: none !important;
+}
+
+.title-bar {
+	background: linear-gradient(90deg,rgb(81, 0, 128),#9310d0);
+    user-select: none;
+}
+
+.window {
+    margin-left:auto;
+    margin-right:auto;
+    width:300px;
+    vertical-align: top;
+}
+
+.window-body {
+    margin:0 !important;
+    color:purple;
+}
+
+.channel-icon {
+    width:24px;
+    height:24px;
+    user-select:none;
+}
+
+.channel-name {
+    margin-left:5px;
+    vertical-align: super;
+    font-weight:700;
+}
+
+.channel-select:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.channel:not(:first-child) {
+    margin-top:5px;
+}
+
+.window-icon {
+    width:20px;
+}
+
+.live {
+    color:purple;
+    width:fit-content;
+    display:inline-block;
+}
+
+.live-channel {
+    background-color:white;
+}
+
+.circle {
+    width:16px;
+    height:16px;
+    background-color:red;
+    border-radius:50%;
+    margin-left:auto;
+    margin-right:auto;
+    display:inline-block;
+}
+
+.pulse {
+    -webkit-animation: pulse 2s ease-out infinite both;
+    animation: pulse 2s ease-out infinite both;
+}
+
+@-webkit-keyframes pulse {
+    0% {
+        -webkit-transform: scale(0.2);
+        transform: scale(0.2);
+        opacity: 0.8;
+    }
+
+    80% {
+        -webkit-transform: scale(1.2);
+        transform: scale(1.2);
+        opacity: 0;
+    }
+
+    100% {
+        -webkit-transform: scale(2.2);
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        -webkit-transform: scale(0.2);
+        transform: scale(0.2);
+        opacity: 0.8;
+    }
+
+    80% {
+        -webkit-transform: scale(1.2);
+        transform: scale(1.2);
+        opacity: 0;
+    }
+
+    100% {
+        -webkit-transform: scale(2.2);
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+.selector {
+    background-image:url('../images/button-right.svg');
+    background-repeat: no-repeat;
+    width:16px;
+    height:17px;
+    position:relative;
+    margin-left:auto;
+}
+
+.selector:active {
+    background-image:url('../images/button-down-active.svg') !important;
+}
+
+.channel-info, .session-info {
+    background: #dfdfdf;
+}
+
+.stream-title {
+    text-align:center;
+    background-color: purple;
+    color:white;
+    border-bottom:1px solid black;
+    margin-left:auto;
+    margin-right:auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding:3px;
+    width:100%;
+}
+
+.stream-title:hover {
+    cursor:pointer;
+    text-decoration: underline;
+}
+
+.stream-info {
+    padding:3px;
+}
+
+.action-group {
+    width:100%;
+    text-align: center;
+    padding:3px;
+}
+
+.status {
+    color:white;
+    font-weight:700;
+    padding:3px;
+}
+
+.online {
+    background-color:green;
+}
+
+.offline {
+    background-color:gray;
+}
+
+.title {
+    font-size:1.5rem;
+    font-weight:700;
+}
+
+.title:hover {
+    cursor:pointer;
+}
+
+.head {
+    font-family:"Inter";
+    text-align:center;
+    padding:5px;
+}
+
+#main {
+    display:block;
+    margin-top:50px;
+}
+
+.window-group {
+    text-align:center;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.window-group-member {
+    display:inline-block;
+}
+
+.window-group-member:not(:first-child) {
+    margin-left:20px;
+}
+
+.window-full-image {
+    width:100%;
+    vertical-align: top;
+}
+
+.window-image-body {
+    margin:0;
+}
+
+#statsPage {
+    margin-top:50px;
+}
+
+#picturesGroup {
+    margin-top:150px;
+    text-align:center;
+}
+
+.window-full-image:hover {
+    cursor: pointer;
+}
+
+.member-2 {
+    background: linear-gradient(90deg,rgb(81, 0, 128),#7c0eaf);
+}
+
+.member-3 {
+    background: linear-gradient(90deg,rgb(81, 0, 128),#680c92);
+}
+
+.member-4 {
+    background: linear-gradient(90deg,rgb(81, 0, 128),#540b79);
+}
+
+.recent-chatters {
+    display:inline-block;
+    padding:3px;
+}
+
+.chatter-name {
+    width:fit-content;
+}
+
+.chatter-name:hover {
+    cursor:pointer;
+    text-decoration: underline;
+}
+
+.list-group {
+    text-align:center;
+}
+
+.list-group-header {
+    font-weight:700;
+    color:white;
+    background-color:rebeccapurple;
+    padding:2px;
+    width:-moz-fit-content;
+    margin-top:10px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.info-property {
+    font-weight:700;
+}
+
+.info-value {
+    margin-left:auto;
+}
+
+.emote {
+    height:24px;
+    width:24px;
+}
+
+.emote-2 {
+    height:48px;
+    width:48px;
+}
+
+#chatterLeaderboard {
+    text-align:start;
+    width:fit-content;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.rank-1 {
+    font-size:13px;
+    font-weight:700;
+}
+
+.rank-2 {
+    font-size:12px;
+    font-weight:700;
+}
+
+.rank-3 {
+    font-weight:700;
+}
+
+.rank-number {
+    background-color:purple;
+    color:white;
+    padding:3px;
+    margin-right:5px;
+}
+
+.rank:not(:first-child) {
+    margin-top:1px;
+}
+
+.rank-name {
+    display:inline-block;
+    width:200px;
+}
+
+.emote-name-section {
+    text-align:start;
+    width:300px;
+}
+
+.emote-name {
+    font-weight:700;
+    margin-left:5px;
+    color:purple;
+    width:100px;
+    display:inline-block;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.emote-name:hover {
+    cursor:pointer;
+    text-decoration: underline;
+}
+
+hr {
+	border: none;
+	width: 350px;
+	height: 1px;
+	opacity: 0.5;
+	background: linear-gradient( to right, rgb(255, 0, 234) 20%, rgb(160, 0, 120) 20%, rgb(219, 0, 135) 36%, rgb(129, 0, 180) 36%, rgb(98, 0, 128) 60%, rgb(204, 0, 255) 60%, blue 100% );
+}
+
+.status-bar-right {
+    float:right;
+}
+
+.login-icon {
+    width:32px;
+    user-select: none;
+    vertical-align: bottom;
+}
+
+.login-icon:hover {
+    cursor:pointer;
+}
+
+.load {
+    text-align:center;
+}
+
+#mainLoad {
+    margin-top:10px;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+    } 
+
+.category-name {
+    width:222px;
+}
+
+.segment-length {
+    margin-left:auto;
+}
+
+.session-item {
+    padding:5px;
+}
+
+.session-item:not(:first-child) {
+    margin-top:10px;
+}
+
+.session-start-date {
+    width:50px;
+    text-align:start;
+}
+
+.session-start-time {
+    width:75px;
+    text-align:start;
+}
+
+.segment-info {
+    padding:3px;
+    text-align:start;
+}
+
+.prefix-icon {
+    margin-right:2px;
+}
+
+.live-length {
+    color:red;
+}
+
+.recent-messages {
+    align-items: baseline;
+}
+
+.message-time {
+    color: #4b5258;
+    margin-right:5px;
+}
+
+.message-name {
+    font-weight:700;
+}
+
+.message-message {
+    color:black;
+    text-overflow: ellipsis;
+    overflow:hidden;
+    margin-left:2px;
+    text-align:left;
+
+}
+
+.action-button:not(:first-child) {
+    margin-left:3px;
+}
+
+#sessionsActionGroup {
+    margin-top:5px;
+}
+
+.emote-item {
+    padding:3px;
+}
+
+.emote-item:not(:first-child) {
+    margin-top:5px;
+}
+
+.top-rank {
+    font-weight:700;
+}
+
+.tooltip-top, .tooltip-bottom {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip-bottom .tooltiptext {
+    visibility: hidden;
+    width: fit-content;
+    color: black;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 5px;
+    
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px;
+    background-color: white;
+  }
+  
+  .tooltip-top .tooltiptext {
+    visibility: hidden;
+    width: fit-content;
+    color: black;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 5px;
+    
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px;
+    background-color: white;
+  }
+  
+  .tooltip-top:hover .tooltiptext {
+    visibility: visible;
+  }
+
+  .tooltip-bottom:hover .tooltiptext {
+    visibility: visible;
+  }
+
+  .tooltiptext:hover {
+    cursor:pointer;
+  }
+
+.emoteList-emote {
+    display: inline-block;
+    text-align:center;
+    width:fit-content;
+  }
+
+.emoteList-emote:not(:first-child) {
+    margin-left:15px;
+  }
+
+.window-blue {
+    background:linear-gradient(90deg,navy,#1084d0);
+}
+
+.logout-button {
+    float:right;
+}
+
+.alt {
+    background:linear-gradient( to right, red 20%, yellow 20%, yellow 36%, green 36%, green 60%, blue 60%, blue 100% );
+}
+
+.sidebar {
+    left:185px;
+    top:0;
+    position:absolute;
+    height:100%;
+    width:300px;
+    display:block ruby;
+}
+
+.sidebar-content {
+    margin-top:120px;
+}
+
+.sidebar-window {
+    width:220px;
+}
+
+.sidebar-window:not(:first-child) {
+    margin-top:25px;
+}
+
+.sidebar-tool {
+    width:max-content;
+}
+
+.sidebar-tool:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.tool-group {
+    color:black;
+}
+
+#login {
+    margin-top:50px;
+}
+
+.login-text {
+    color:black;
+    font-weight:700;
+    width:60px;
+}
+
+#loginButton {
+    float:right;
+}
+
+.bad-login {
+    display:none;
+    padding:5px;
+    color:rgb(143, 0, 0);
+}
+
+.logo:hover {
+    cursor:pointer;
+}
+
+.logo-1 {
+    width:64px;
+}
+
+.logo-2 {
+    width:32px;
+}
+
+.logo-3 {
+    width:16px;
+}
+
+.logo-4 {
+    width:16px;
+}
+
+.logo:not(:first-child) {
+    margin-left:2px;
+}
+
+#main-admin {
+    margin-top:50px;
+    width:800px;
+}
+
+#logout {
+    display: inline-block;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:10px;
+}
+
+.username {
+    font:10pt verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif;
+    color:black;
+    font-weight:700;
+    padding:0.5px;
+}
+
+.username:hover {
+    cursor:default;
+}
+
+.name-icon {
+    margin-right:2px;
+}
+
+.stats-section {
+    display:inline-block;
+    width:33%;
+    text-align:center;
+}
+
+.stats-counter {
+    font-size:32px;
+    font-weight:800;
+}
+
+.stats-counter-small {
+    font-size:24px;
+    font-weight:800;
+}
+
+.stats-type {
+    background-color:purple;
+    color:white;
+    padding:3px;
+    margin-left:auto;
+    margin-right:auto;
+    font-weight:700;
+    width:fit-content;
+}
+
+.stats-type-small {
+    background-color:purple;
+    color:white;
+    padding:3px;
+    width:fit-content;
+    font-weight:700;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#channelsTracked {
+    text-decoration: underline;
+}
+
+#channelsTracked:hover, #channelsTrackedText:hover {
+    cursor:pointer;
+}
+
+#console-window {
+    height:max-content;
+    width:500px;
+    margin-left:auto;
+    margin-right:auto;
+    overflow:scroll;
+    max-height:200px;
+}
+
+#console {
+    background-color:black;
+    color:white;
+}
+
+.console-datetime {
+    color:blue;
+    white-space: nowrap;
+}
+
+.console-channel-name {
+    color:purple;
+    margin-left:5px;
+}
+
+.console-message-type-info {
+    color:green;
+    margin-left:5px;
+}
+
+.console-message {
+    margin-left:5px;
+}
+
+#refresh {
+    color:purple;
+}
+
+#subContentStats {
+    margin-top:25px;
+}
+
+.small-loader {
+    height:16px;
+    width:16px;
+}
+
+#clock {
+    margin-left:2px;
+}
+
+#timezone, #runtime {
+    margin-left:2px;
+}
+
+.stream-tracked {
+    color:green;
+}
+
+.stream-not-tracked {
+    color:red;
+}
+
+.indicator {
+    width:15px;
+}
+
+#streamsListTooltip {
+    border:1px solid black;
+    opacity:75%;
+}
+
+.emote-breakdown {
+    font-weight:700;
+}
+
+.emote-breakdown-counter {
+    display:inline-block;
+    width:50px;
+}
+
+.emote-log {
+    text-align:start;
+}
+
+.log-icon {
+    border:2px solid purple;
+    border-radius:50%;
+}
+
+.log-item {
+    background:#dfdfdf;
+    margin:0;
+    padding:2px;
+}
+
+.log-item:not(:last-child) {
+    border-bottom:1px solid black;
+}
+
+.badge {
+    display:inline-block;
+    padding:5px;
+    color:white;
+    border-radius:0.375rem;
+    line-height:1;
+    background-color:#6c757d;
+}
+
+.log-date {
+    margin-left:5px;
+    margin-right:5px;
+}
+
+.log-channel-name {
+    margin-left:3px !important;
+    margin-right:3px;
+}
+
+.log-emote-name {
+    margin-left:1px !important;
+    margin-right:auto;
+}
+
+.log-type {
+    /* width:fit-content; */
+    width:75px;
+    padding:3px;
+}
+
+.text-enabled {
+    font-weight:700;
+    color:green; 
+}
+
+.text-disabled {
+    font-weight:700;
+    color:red;
+}
+
+.text-reactivated {
+    font-weight:700;
+    color:#6c757d;
+}
+
+.admin {
+    margin-top:5px;
+}
+
+.admin-name {
+    margin-left:3px;
+}
+
+.admin-name:hover {
+    text-decoration: underline;
+    cursor:pointer;
+}
+
+.prefix-icon-fixed {
+    width:10px !important;
+}
+
+#updatesPanel {
+    width:fit-content;
+    overflow:scroll;
+    max-height:200px;
+    height:200px;
+    margin-top:25px;
+}
+
+.no-updates-text {
+    text-align:center;
+    margin-top:30%;
+    opacity:50%;
+}
+
+.admin-title {
+    font-size:16px;
+    font-weight:600;
+    display:inline-block;
+    width:100%;
+    margin-left:auto;
+    margin-right:auto;
+    background:linear-gradient(180deg,navy,#1084d0);
+    border:1.5px solid black;
+    color:white;
+}
+
+.admin-tools-icon {
+    vertical-align: bottom;
+}
+
+#content-admin {
+    color: black;
+    margin-top:30px;
+    background-color:#c6c6c6;
+    padding:3px;
+    text-align: center;
+}
+
+.actions-list {
+    width:fit-content;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.admin-button {
+    display:grid;
+    width:110px;
+}
+
+.admin-button:not(:first-child) {
+    margin-top:10px;
+}
+
+.admin-title-text {
+    vertical-align:super;
+}
+
+#adminArchiveButton {
+    color:darkblue;
+}
+
+.channel-emotes-button {
+    margin-bottom:5px;
+}
+
+#channelEmotesWindow {
+    width:1000px;
+}
+
+.channel-emote-holder {
+    text-align:center;
+    padding:10px;
+}
+
+.channel-emote {
+    height:48px;
+    width:48px;
+    vertical-align: text-top;
+}
+
+.channel-emote-name {
+    display:block;
+    margin-top:3px;
+    color:purple;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Twitch-emote, .Subscriber-emote {
+    background-color:purple;
+    color:white;
+    margin-top:5px;
+    padding:1px;
+    border-radius:8%;
+    opacity:50%;
+}
+
+.FFZ-emote {
+    background-color:#935635;
+    color:white;
+    margin-top:5px;
+    padding:2px;
+    border-radius:8%;
+    opacity:50%;
+}
+
+.BTTV-emote {
+    background-color:darkblue;
+    color:white;
+    margin-top:5px;
+    padding:2px;
+    border-radius:8%;
+    opacity:50%;
+}
+
+.channel-emotes-list-emote {
+    display:inline-block;
+    width:100px;
+}
+
+.channel-emote-type {
+    display:block;
+}
+
+.logo-icon-title {
+    width:10px;
+    height:10px;
+}
+
+#consoleIcon {
+    color:white;
+}
+
+#mainActionGroup {
+    margin-top:10px;
+}
+
+.channel {
+    padding:3px;
+}
+
+#loginWindowBody {
+    padding:5px;
+}
+
+.mouse-down {
+    cursor:progress;
+}
+
+#channelEmotesWindow {
+    margin-top:50px;
+}
+
+.admin-sidebar-tool-group {
+    padding:5px;
+}
+
+.admin-sidebar-tool:hover {
+    cursor:pointer;
+    text-decoration: underline;
+}
+
+.admin-sidebar-tool {
+    width:fit-content;
+}
+
+.admin-channel-list {
+    padding:5px;
+}
+
+.manage-emotes-col {
+    display:inline-block;
+}
+
+.manage-emote-row {
+    color:black;
+}
+
+.manage-emotes-emote-image-col {
+    width:24px;
+    height:45px;
+}
+
+.manage-emotes-emote-name-col {
+    width:200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.manage-emotes-emote-count-col {
+    width:75px;
+}
+
+.manage-emotes-emote-url-col {
+    width:160px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.manage-emotes-emote-path-col {
+    width:160px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.manage-emotes-emote-date-col {
+    width:75px;
+}
+
+.manage-emotes-emote-source-col {
+    width:55px;
+    text-align:center;
+}
+
+.manage-emotes-emote-active-col {
+    width:50px;
+    text-align:center;
+}
+
+.manage-emotes-emote-tools-col {
+    width:125px;
+    vertical-align: inherit;
+    text-align:center;
+    height:fit-content;
+}
+
+.admin-tool:not(:first-child) {
+    margin-left:4px;
+}
+
+.admin-tool:hover {
+    cursor:pointer;
+}
+
+#adminManageEmotes {
+    width:fit-content;
+}
+
+.manage-emotes-emote-image {
+    width:32px;
+}
+
+.manage-emotes-emote-source, .manage-emotes-emote-active {
+    vertical-align: baseline;
+}
+
+.delete-tool, .disable-tool {
+    box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #fff,inset -2px -2px grey,inset 2px 2px #dfdfdf;
+    background:darkred;
+    color:white;
+    padding:5px;
+}
+
+.delete-tool:active, .disable-tool:active {
+    box-shadow:none;
+}
+
+.enable-tool, .edit-complete-tool {
+    box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #fff,inset -2px -2px grey,inset 2px 2px #dfdfdf;
+    background:darkgreen;
+    color:white;
+    padding:5px;
+}
+
+.enable-tool:active, .edit-complete-tool:active {
+    box-shadow:none;
+}
+
+.edit-tool {
+    box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #fff,inset -2px -2px grey,inset 2px 2px #dfdfdf;
+    background:darkgray;
+    color:white;
+    padding:5px;
+}
+
+.download-tool {
+    box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #fff,inset -2px -2px grey,inset 2px 2px #dfdfdf;
+    background:darkblue;
+    color:white;
+    margin-left:4px;
+    padding:5px;
+}
+
+.download-tool:active {
+    box-shadow:none;
+}
+
+.edit-tool:active {
+    box-shadow: none;
+}
+
+.admin-tool {
+    display:inline-block;
+    text-align:center;
+    width:15px;
+}
+
+#manageEmotesTable {
+}
+
+#manageEmotesHeaderRow {
+    background-color:purple;
+    color:white;
+    border-bottom:1px solid black;
+}
+
+.channel-emote {
+    width:32px;
+    height:32px;
+}
+
+.emote-Enabled {
+    color:green;
+    margin-top:5px;
+    border-radius:8%;
+    font-weight:700;
+}
+
+.emote-Disabled {
+    color:red;
+    margin-top:5px;
+    border-radius:8%;
+    font-weight:700;
+}
+
+.icon-group-left {
+    float:left;
+}
+
+.icon-group-right {
+    float:right;
+}
+
+.icon-group-member:not(:first-child) {
+    margin-left:5px;
+}
+
+.fa-github-square {
+    vertical-align: super;
+}
+
+.fa-github-square:hover {
+    cursor:pointer;
+}
+
+tr:nth-child(even) {
+    background-color: #d7d7d7;
+}
+
+#githubIcon {
+    color:black;
+    display:inline-block;
+}
+
+.info-help {
+    margin-top:10px;
+    margin-bottom:5px;
+    text-align:center;
+}
+
+.info-help-text {
+    text-decoration: underline;
+}
+
+.info-help-text:hover {
+    cursor:pointer;
+}
+
+.info-help-text-emphasis {
+    font-weight:700;
+}
+
+.info-help-text-name {
+    color:purple;
+}
+
+.info-help-text-emote {
+    color:orange;
+}
+
+#infoToolTip {
+    width:500px;
+    border:1px solid black;
+    left:-150%;
+}
+
+.color-bttv {
+    color:darkblue;
+}
+
+.color-ffz {
+    color:#935635;
+}
+
+.color-twitch {
+    color:purple;
+}
+
+.info-help-row {
+    width:100px;
+    display:inline-block;
+}
+
+.info-help-hide {
+    font-size:8px;
+}
+
+.info-help-hide:hover {
+    cursor:pointer;
+}
+
+.emote-count {
+    font-weight:700;
+}
+
+.emote-source {
+    display: inline-block;
+    width:80px;
+    margin-right:5px;
+}
+
+#infoPageButton {
+    font-size:20px;
+    --fa-primary-color: white;
+    --fa-secondary-color: purple;
+    --fa-secondary-opacity:75%;
+}
+
+#infoPageButton:hover {
+    cursor:pointer;
+}

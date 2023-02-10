@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Chattercat</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles/98.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="lib/css/fontawesome-pro-6.0.0-web/css/all.css">
+    <script src="lib/js/jquery-3.6.1.min.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DR9MQ2522R"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DR9MQ2522R');
+    </script>
+</head>
+<body>
+    <div class="head">
+      <span class="icon-group icon-group-left">
+        <i class="fa-duotone fa-circle-info" id="infoPageButton"></i>
+      </span>
+      <span class="title">Chattercat</span>
+      <span class="icon-group icon-group-right">
+        <a href="https://www.github.com/mburly" id="githubIcon" target="_blank"><i class="fab fa-github-square fa-2x icon-group-member"></i></a>
+        <img src="images/users-icon.png" class="login-icon icon-group-member">
+      </span>
+      <div id="statusContainer">
+        status:
+        <!-- <span class="status online">online</span> -->
+        <span class="loader small-loader" id="statusLoader"></span>
+      </div>
+    </div>
+    <hr>
+    <div id="main">
+      <div class="window">
+          <div class="title-bar">
+            <div class="title-bar-text"><img class="logo-icon-title" src="images/favicon.png">Chattercat - click a channel name to view stats</div>
+          </div>
+          <div class="window-body">
+              <div class="info-help" id="infoHelp">
+                <i class="info-help-hide fas fa-x" title="hide this"></i>
+                <div class="tooltip tooltip-bottom" id="infoToolTipHolder">
+                  <span class="info-help-text">
+                    What is Chattercat?
+                    <span class="tooltiptext" id="infoToolTip">
+                      <span class="info-help-text-emphasis info-help-text-name">Chattercat</span> is an application powered by Python that listens to <a class="color-twitch" href="https://www.twitch.tv" target="_blank">Twitch.tv</a> IRC chatrooms and
+                      tracks <span class="info-help-text-emphasis info-help-text-emote">emote</span> frequency in messages.
+                      <br><br>
+                      <span class="info-help-text-emphasis info-help-text-emote">Emotes</span>, similar to emojis, are icons used as reactions that appear in place of text in Twitch messages.
+                      Twitch provides a default set of emotes, while third-party browser extensions such as <a class="color-bttv" href="https://www.betterttv.com", target="_blank">BetterTTV</a> and <a class="color-ffz" href="https://www.frankerfacez.com" target="_blank">FrankerFaceZ</a> allow channels to add custom emotes to their chatroom.
+                      <br><br>
+                      Here's a demonstration of an <span class="info-help-text-emphasis info-help-text-emote">emote</span> used in a Twitch chat message:
+                      <br><br>
+                      <span class="info-help-row">What IRC sees:</span>sample_user: LUL
+                      <br>
+                      <span class="info-help-row">What Twitch sees:</span> sample_user: <img class="emote" src="emotes/twitch/LUL-425618.png">
+                      <br><br>
+                      Click any channel name to view stats and a leaderboard of that channel's top 10 emotes.
+                      <br>
+                      Live channels are indicated by white highlighted names.
+                      <br><br>
+                      Click the title on any page to return to the main page.
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div class="action-group" id="mainActionGroup">
+                <button class="action-button" id="mainExpandButton">Expand all</button>
+                <button class="action-button" id="mainCollapseButton">Collapse all</button>
+                <button class="action-button" id="mainRefreshButton" style="color:purple;">Refresh</button>
+              </div>
+              <div class="load">
+                <span class="loader" id="mainLoad"></span>
+              </div>
+              <ul class="channels">
+              </ul>
+          </div>
+      </div>
+
+      <div class="window-group" id="picturesGroup">
+        <div class="window window-group-member">
+          <div class="title-bar">
+            <div class="title-bar-text"><img src="images/flag-usa.svg" class="window-icon">cincinnati.jpg</div>
+            <div class="title-bar-controls">
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body window-image-body">
+            <img src="images/cincinnati.jpg" class="window-full-image">
+          </div>
+        </div>
+
+        <div class="window window-group-member">
+          <div class="title-bar">
+            <div class="title-bar-text"><img src="images/flag-se.svg" class="window-icon">singapore.jpg</div>
+            <div class="title-bar-controls">
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body window-image-body">
+            <img src="images/singapore.jpg" class="window-full-image">
+          </div>
+        </div>
+
+      <div class="window window-group-member">
+        <div class="title-bar">
+          <div class="title-bar-text"><img src="images/flag-ca.svg" class="window-icon">vancouver.jpg</div>
+          <div class="title-bar-controls">
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="window-body window-image-body">
+          <img src="images/vancouver.jpg" class="window-full-image">
+        </div>
+      </div>
+
+
+    </div>
+    <script src="js/main.js"></script>
+    <!-- <div class="live"><div class="circle pulse"></div><span class="tracking-text">Currently tracking 2 channels</span></div> -->
+</body>
+</html>
