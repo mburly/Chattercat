@@ -22,13 +22,9 @@
         }
     }
     fclose($configFile);
-
-
     $conn = new mysqli($host, $user, $password, "cc_housekeeping");
-
     $usernames = '';
     $roles = '';
-
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
     }
@@ -42,12 +38,6 @@
         $usernames = substr($usernames, 0, -1);
         $roles = substr($roles, 0, -1);
         returnInfo($usernames, $roles);
-    }
-
-    
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
     }
 
     function sendResultInfoAsJson( $obj )

@@ -200,49 +200,47 @@ function listeners() {
     $('body').on('click', '.channel-select', function() {
         var channel = $(this).attr('id').split('-')[0];
         if(state == "manageEmotesChannelSelect") {
-            remove(state);
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "php/adminEmotes.php", false);
-            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-            var jsonPayload = '{"channel" : "' + channel + '"}';
-            xhr.send(jsonPayload);
-            var data = JSON.parse(xhr.responseText);
-            $('body').append('<div class="window" id="adminManageEmotes"><div class="title-bar window-blue"><div class="title-bar-text">' + channel + ' - Manage Emotes</div></div><div class="window-body"><table class="admin-manage-emote-table" id="manageEmotesTable" style="background:#c6c6c6;"><tr id="manageEmotesHeaderRow"><th class="manage-emotes-col manage-emotes-emote-image-col"></th><th class="manage-emotes-col manage-emotes-emote-name-col">Name</th><th class="manage-emotes-col manage-emotes-emote-count-col">Usage</th><th class="manage-emotes-col manage-emotes-emote-url-col">URL</th><th class="manage-emotes-col manage-emotes-emote-path-col">Path</th><th class="manage-emotes-col manage-emotes-emote-date-col">Date added</th><th class="manage-emotes-col manage-emotes-emote-source-col">Source</th><th class="manage-emotes-col manage-emotes-emote-active-col">Active</th><th class="manage-emotes-col manage-emotes-emote-tools-col">Actions</th></tr>');
-            for(let i = 0; i < data["codes"].length; i++) {
-                var dateTemp = data["dates"][i].split('-');
-                var date_addded = dateTemp[1] + '/' + dateTemp[2] + '/' + dateTemp[0];
-                var source = "Twitch";
-                var active = "Enabled";
-                if(data["sources"][i] == 2) {
-                    source = "Subscriber";
+            $.post("php/adminEmotes.php", {channel: channel})
+            .done(function(data) {
+                data = JSON.parse(data);
+                $('body').append('<div class="window" id="adminManageEmotes"><div class="title-bar window-blue"><div class="title-bar-text">' + channel + ' - Manage Emotes</div></div><div class="window-body"><table class="admin-manage-emote-table" id="manageEmotesTable" style="background:#c6c6c6;"><tr id="manageEmotesHeaderRow"><th class="manage-emotes-col manage-emotes-emote-image-col"></th><th class="manage-emotes-col manage-emotes-emote-name-col">Name</th><th class="manage-emotes-col manage-emotes-emote-count-col">Usage</th><th class="manage-emotes-col manage-emotes-emote-url-col">URL</th><th class="manage-emotes-col manage-emotes-emote-path-col">Path</th><th class="manage-emotes-col manage-emotes-emote-date-col">Date added</th><th class="manage-emotes-col manage-emotes-emote-source-col">Source</th><th class="manage-emotes-col manage-emotes-emote-active-col">Active</th><th class="manage-emotes-col manage-emotes-emote-tools-col">Actions</th></tr>');
+                for(let i = 0; i < data["codes"].length; i++) {
+                    var dateTemp = data["dates"][i].split('-');
+                    var date_addded = dateTemp[1] + '/' + dateTemp[2] + '/' + dateTemp[0];
+                    var source = "Twitch";
+                    var active = "Enabled";
+                    if(data["sources"][i] == 2) {
+                        source = "Subscriber";
+                    }
+                    else if(data["sources"][i] == 3 || data["sources"][i] == 4) {
+                        source = "FFZ";
+                    }
+                    else if(data["sources"][i] == 5 || data["sources"][i] == 6) {
+                        source = "BTTV";
+                    }
+                    if(!data["active"][i]) {
+                        active = "Disabled";
+                    }
+                    const imageCol = '<td class="manage-emotes-col manage-emotes-emote-image-col manage-emotes-emote-image"><div class="tooltip-top"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"][i] + '-tooltip" src="' + data["paths"][i] + '"></span><img class="channel-emote" src="' + data["paths"][i] + '"></div></td>';
+                    const nameCol = '<td class="manage-emotes-col manage-emotes-emote-name-col manage-emotes-emote-name emote-name">' + data["codes"][i] + '</td>';
+                    const countCol = '<td class="manage-emotes-col manage-emotes-emote-count-col manage-emotes-emote-count">' + data["counts"][i].toLocaleString('en-US') + '</td>';
+                    const urlCol = '<td class="manage-emotes-col manage-emotes-emote-url-col manage-emotes-emote-url"><a href="' + data["urls"][i] +'" title="' + data["urls"][i] + '">' + data["urls"][i] + '</a></td>';
+                    const pathCol = '<td class="manage-emotes-col manage-emotes-emote-path-col manage-emotes-emote-path" title="' + data["paths"][i] + '">' + data["paths"][i] + '</td>';
+                    const dateCol = '<td class="manage-emotes-col manage-emotes-emote-date-col manage-emotes-emote-date-added">' + date_addded + '</td>';
+                    const sourceCol = '<td class="manage-emotes-col manage-emotes-emote-source-col manage-emotes-emote-source ' + source + '-emote">' + source + '</td>';
+                    const activeCol = '<td class="manage-emotes-col manage-emotes-emote-active-col manage-emotes-emote-active emote-' + active + '" id="' + data["sources"][i] + '-' + data["emote_ids"][i] + '-active">' + active + '</td>';
+                    var toolsCol = ''; 
+                    if(active == "Enabled") {
+                        toolsCol = '<td class="manage-emotes-col manage-emotes-emote-tools-col manage-emotes-tools"><span class="admin-tool edit-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-editButton" title="edit this emote"><i class="fas fa-cog"></i></span><a class="download-emote-link" href="' + data["urls"][i] + '" download target="_blank"><span class="admin-tool download-tool" title="download this emote"><i class="fas fa-download"></i></a></span><span class="admin-tool disable-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-disableButton" title="disable this emote"><i class="fas fa-cancel"></i></span><span class="admin-tool delete-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-deleteButton" title="delete this emote"><i class="fas fa-x"></i></span></td>';
+                    }
+                    else {
+                        toolsCol = '<td class="manage-emotes-col manage-emotes-emote-tools-col manage-emotes-tools"><span class="admin-tool edit-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-editButton" title="edit this emote"><i class="fas fa-cog"></i></span><a class="download-emote-link" href="' + data["urls"][i] + '" download target="_blank"><span class="admin-tool download-tool" title="download this emote"><i class="fas fa-download"></i></a></span><span class="admin-tool enable-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-enableButton" title="enable this emote"><i class="fas fa-check"></i></span><span class="admin-tool delete-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-deleteButton" title="delete this emote"><i class="fas fa-x"></i></span></td>';
+                    }
+                    $('.admin-manage-emote-table').append('<tr class="manage-emote-row" id="' + data["sources"][i] + '-' +  data["emote_ids"][i] + '-manageRow">' + imageCol + nameCol + countCol + urlCol + pathCol + dateCol + sourceCol + activeCol + toolsCol + '</tr>');
                 }
-                else if(data["sources"][i] == 3 || data["sources"][i] == 4) {
-                    source = "FFZ";
-                }
-                else if(data["sources"][i] == 5 || data["sources"][i] == 6) {
-                    source = "BTTV";
-                }
-                if(!data["active"][i]) {
-                    active = "Disabled";
-                }
-                const imageCol = '<td class="manage-emotes-col manage-emotes-emote-image-col manage-emotes-emote-image"><div class="tooltip-top"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"][i] + '-tooltip" src="' + data["paths"][i] + '"></span><img class="channel-emote" src="' + data["paths"][i] + '"></div></td>';
-                const nameCol = '<td class="manage-emotes-col manage-emotes-emote-name-col manage-emotes-emote-name emote-name">' + data["codes"][i] + '</td>';
-                const countCol = '<td class="manage-emotes-col manage-emotes-emote-count-col manage-emotes-emote-count">' + data["counts"][i].toLocaleString('en-US') + '</td>';
-                const urlCol = '<td class="manage-emotes-col manage-emotes-emote-url-col manage-emotes-emote-url"><a href="' + data["urls"][i] +'" title="' + data["urls"][i] + '">' + data["urls"][i] + '</a></td>';
-                const pathCol = '<td class="manage-emotes-col manage-emotes-emote-path-col manage-emotes-emote-path" title="' + data["paths"][i] + '">' + data["paths"][i] + '</td>';
-                const dateCol = '<td class="manage-emotes-col manage-emotes-emote-date-col manage-emotes-emote-date-added">' + date_addded + '</td>';
-                const sourceCol = '<td class="manage-emotes-col manage-emotes-emote-source-col manage-emotes-emote-source ' + source + '-emote">' + source + '</td>';
-                const activeCol = '<td class="manage-emotes-col manage-emotes-emote-active-col manage-emotes-emote-active emote-' + active + '" id="' + data["sources"][i] + '-' + data["emote_ids"][i] + '-active">' + active + '</td>';
-                var toolsCol = ''; 
-                if(active == "Enabled") {
-                    toolsCol = '<td class="manage-emotes-col manage-emotes-emote-tools-col manage-emotes-tools"><span class="admin-tool edit-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-editButton" title="edit this emote"><i class="fas fa-cog"></i></span><a class="download-emote-link" href="' + data["urls"][i] + '" download target="_blank"><span class="admin-tool download-tool" title="download this emote"><i class="fas fa-download"></i></a></span><span class="admin-tool disable-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-disableButton" title="disable this emote"><i class="fas fa-cancel"></i></span><span class="admin-tool delete-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-deleteButton" title="delete this emote"><i class="fas fa-x"></i></span></td>';
-                }
-                else {
-                    toolsCol = '<td class="manage-emotes-col manage-emotes-emote-tools-col manage-emotes-tools"><span class="admin-tool edit-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-editButton" title="edit this emote"><i class="fas fa-cog"></i></span><a class="download-emote-link" href="' + data["urls"][i] + '" download target="_blank"><span class="admin-tool download-tool" title="download this emote"><i class="fas fa-download"></i></a></span><span class="admin-tool enable-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-enableButton" title="enable this emote"><i class="fas fa-check"></i></span><span class="admin-tool delete-tool" id="' + channel + '-' + data["sources"][i] + '-' + data["emote_ids"][i] + '-deleteButton" title="delete this emote"><i class="fas fa-x"></i></span></td>';
-                }
-                $('.admin-manage-emote-table').append('<tr class="manage-emote-row" id="' + data["sources"][i] + '-' +  data["emote_ids"][i] + '-manageRow">' + imageCol + nameCol + countCol + urlCol + pathCol + dateCol + sourceCol + activeCol + toolsCol + '</tr>');
-            }
-            state = "adminManageEmotes";
+                remove(state);
+                state = "adminManageEmotes";
+            });
         }
     });
 
@@ -251,11 +249,7 @@ function listeners() {
         var channel = id[0];
         var source = id[1];
         var emote_id = id[2];
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "php/adminEmoteUpdate.php", false);
-        xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-        var jsonPayload = '{"channel" : "' + channel + '","source" : ' + source + ',"emote_id" : "' + emote_id + '","new_value" : 0,"type" : "' + 'active"}';
-        xhr.send(jsonPayload);
+        $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: 0, type: "active"});
         id = $(this).attr('id').split('-');
         var channel = id[0];
         var source = id[1];
@@ -272,11 +266,7 @@ function listeners() {
         var channel = id[0];
         var source = id[1];
         var emote_id = id[2];
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "php/adminEmoteUpdate.php", false);
-        xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-        var jsonPayload = '{"channel" : "' + channel + '","source" : ' + source + ',"emote_id" : "' + emote_id + '","new_value" : 1,"type" : "' + 'active"}';
-        xhr.send(jsonPayload);
+        $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: 1, type: "active"});
         id = $(this).attr('id').split('-');
         var channel = id[0];
         var source = id[1];
@@ -339,53 +329,61 @@ function listeners() {
         var rowId = id.split(channel + '-')[1].split('-editCompleteTool')[0] + '-manageRow';
         var fields = document.getElementById(rowId).children;
         var numChanges = 0;
-        var changes = '{"channel":"' + channel + '","source":' + source + ',"emote_id":"' + emote_id + '",';
+        var newCode = '';
+        var newCount = -1;
+        var newUrl = '';
+        var newPath = '';
+        var newDate = '';
         for (let i = 0; i < fields.length; i++) {
             var tag = fields[i].outerHTML;
             if(isNameRow(tag)) {
                 if(fields[i].value != _name) {
-                    changes += '"code":"' + fields[i].value + '",';
+                    newCode = fields[i].value;
                     numChanges += 1;
                 }
             }
             else if(isUsageRow(tag)) {
                 if(parseInt(fields[i].value) != _usage) {
-                    changes += '"count":' + fields[i].value + ',';
+                    newCount = parseInt(fields[i].value);
                     numChanges += 1;
                 }
             }
             else if(isUrlRow(tag)) {
                 if(fields[i].value != _url) {
-                    changes += '"url":"' + fields[i].value + '",';
+                    newUrl = fields[i].value;
                     numChanges += 1;
                 }
             }
             else if(isPathRow(tag)) {
                 if(fields[i].value != _path) {
-                    changes += '"path":"' + fields[i].value + '",';
+                    newPath = fields[i].value;
                     numChanges += 1;
                 }
             }
             else if(isDateRow(tag)) {
                 if(fields[i].value != _dateAdded) {
-                    changes += '"date":"' + fields[i].value + '",';
+                    newDate = fields[i].value;
                     numChanges += 1;
                 }
             }
         }
         if(numChanges > 0) {
-            changes = changes.slice(0, -1);
             if(numChanges == 1) {
-                // php emote single update 
-                // adminEmoteUpdate.php
-
-                var column = changes.split(',')[3].split(':')[0];
-                changes = changes.replace(column, "\"new_value\"");
-                changes += ',"type":"' + column.replaceAll('\"',"") + '"}';
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "php/adminEmoteUpdate.php", false);
-                xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-                xhr.send(changes);
+                if(newCode != '') {
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCode, type: "code"});   
+                }
+                else if(newCount != -1) {
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCount, type: "count"});
+                }
+                else if(newUrl != '') {
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newUrl, type: "url"});
+                }
+                else if(newPath != '') {
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newPath, type: "path"});
+                }
+                else if(newDate != '') {
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newDate, type: "date"});
+                }
             }
             else {
                 // php emote multiple updates
@@ -420,12 +418,7 @@ function listeners() {
         var channel = id[0];
         var source = id[1];
         var emote_id = id[2];
-        var jsonPayload = '{"channel":"' + channel + '","source":' + source + ',"emote_id":"' + emote_id + '"}';
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "php/adminEmoteDelete.php", false);
-        xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-        xhr.send(jsonPayload);
-        console.log(xhr.responseText);
+        $.post("php/adminEmoteDelete.php", {channel: channel, source: source, emote_id: emote_id});
         var rowId = $(this).attr('id').split(channel + '-')[1].split('-deleteButton')[0] + '-manageRow';
         remove(rowId);
     });

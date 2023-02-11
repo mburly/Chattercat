@@ -1,6 +1,5 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -44,12 +43,7 @@
             returnWithError("invalid token");
         }
     }
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
-
+    
     function sendResultInfoAsJson( $obj )
     {
         header('Content-Type: text/html');

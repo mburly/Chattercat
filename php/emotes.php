@@ -2,7 +2,6 @@
     set_time_limit(0);
     ignore_user_abort(1);
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -23,8 +22,7 @@
         }
     }
     fclose($configFile);
-
-    $db = 'cc_' . $in["channel"];
+    $db = 'cc_' . $_POST["channel"];
     $conn = new mysqli($host, $user, $password, $db); 
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
@@ -50,11 +48,6 @@
 
         }
     }
-    
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
 
     function sendResultInfoAsJson( $obj )
     {
@@ -67,8 +60,7 @@
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
     }
-    
-    
+
     function returnInfo($codes, $paths, $sources)
     {
         $retVal = '{';

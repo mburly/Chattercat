@@ -1,6 +1,5 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -91,11 +90,6 @@
         returnInfo($channelNames, $live, $liveChannels, $liveGames, $liveTimes, $liveTitles, $liveMessageCounts, $liveNumChatters, $liveNewChatters);
     }
     
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
-
     function sendResultInfoAsJson( $obj )
     {
         header('Content-Type: text/html');
@@ -106,13 +100,7 @@
     {
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
-    }
-    
-    function returnWithInfo($items)
-    {
-        $retVal = '{"results":[' . $items . '],"error":""}';
-        sendResultInfoAsJson($retVal);
-    }
+    }  
     
     function returnInfo($channels, $live, $liveChannels, $liveGames, $liveTimes, $liveTitles, $liveMessageCounts, $liveNumChatters, $liveNewChatters)
     {

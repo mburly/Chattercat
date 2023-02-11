@@ -1,10 +1,8 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
     $host = '';
     $user = '';
     $password = '';
-
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     while(!feof($configFile)) {
         $line = fgets($configFile);
@@ -22,8 +20,6 @@
         }
     }
     fclose($configFile);
-
-
     $conn = new mysqli($host, $user, $password, "cc_housekeeping");
     $channels = array();
     $pictures = array();
@@ -42,18 +38,16 @@
                 array_push($channels, explode("cc_", $dbname)[1]);
                 $sql = 'SELECT url FROM pictures WHERE channel = "' . explode("cc_", $dbname)[1] . '" ORDER BY id DESC LIMIT 1;';
                 $conn2 = new mysqli($host, $user, $password, "cc_housekeeping");
-                $result2 = $conn2->query($sql);
-                array_push($pictures, $result2->fetch_assoc()["url"]);
+                $url = $conn2->query($sql)->fetch_assoc()["url"];
+                if($url !== null) {
+                    array_push($pictures, $url);
+                }
+                else {
+                }
                 $conn2->close();
             }
         }
-    }
-
-    returnInfo($channels, $pictures);
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
+        returnInfo($channels, $pictures);
     }
 
     function sendResultInfoAsJson( $obj )

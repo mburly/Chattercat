@@ -6,7 +6,6 @@
         returnWithError("no token");
     }
     else {
-        $in = getRequestInfo();
         $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
         $host = '';
         $user = '';
@@ -114,9 +113,7 @@
                     }
                     $counter = $counter + 1;
                 }
-    
                 returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $consoleDatetimes, $consoleChannels, $consoleMessages, $consoleTypes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline);
-    
             }
             else {
                 returnWithError("no admin credentials");
@@ -138,11 +135,6 @@
         }
         return $channels;
     }
-    
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
 
     function sendResultInfoAsJson( $obj )
     {
@@ -154,12 +146,6 @@
     {
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
-    }
-    
-    function returnWithInfo($items)
-    {
-        $retVal = '{"results":' . $items . ',"error":""}';
-        sendResultInfoAsJson($retVal);
     }
     
     function returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $consoleDatetimes, $consoleChannels, $consoleMessages, $consoleTypes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline)

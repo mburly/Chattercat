@@ -1,6 +1,5 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
     $streamsFile = fopen("../streams.txt", "r") or die("Unable to open file!");
     $streams = array();
     while(!feof($streamsFile)) {
@@ -10,11 +9,9 @@
         }
     }
     fclose($streamsFile);
-
     $host = '';
     $user = '';
     $password = '';
-
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     while(!feof($configFile)) {
         $line = fgets($configFile);
@@ -32,8 +29,6 @@
         }
     }
     fclose($configFile);
-
-
     $conn = new mysqli($host, $user, $password, "cc_housekeeping");
     $channels = array();
     if($conn->connect_error) {
@@ -51,11 +46,6 @@
     }
 
     returnInfo($streams, $channels);
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
 
     function sendResultInfoAsJson( $obj )
     {

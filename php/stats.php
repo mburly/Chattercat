@@ -1,7 +1,6 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
-    $db_name = "cc_" . $in["channel"];
+    $db_name = "cc_" . $_POST["channel"];
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -23,7 +22,6 @@
     }
     fclose($configFile);
     $conn = new mysqli($host, $user, $password, $db_name);
-
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
     }
@@ -137,11 +135,6 @@
         return preg_replace('/[\x00-\x1F\x7F]/u', '', $string);
     }
 
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
-
     function sendResultInfoAsJson( $obj )
     {
         header('Content-Type: text/html');
@@ -152,12 +145,6 @@
     {
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
-    }
-    
-    function returnWithInfo($items)
-    {
-        $retVal = '{"results":[' . $items . '],"error":""}';
-        sendResultInfoAsJson($retVal);
     }
     
     function returnInfo($topEmoteCodes, $topEmotePaths, $topEmoteCounts, $topEmoteSources, $numEmotes, $numChatters, $topChatterNames, $topChatterCounts, $recentChatterNames, $recentSessionMessageCount, $numMessages, $recentMessageNames, $recentMessageMessages, $recentMessageDatetimes, $recentSessionStartDatetimes, $recentSessionLengths, $recentSegmentCategories, $recentSegmentLengths, $recentSegmentTitles, $recentSegmentSessions)

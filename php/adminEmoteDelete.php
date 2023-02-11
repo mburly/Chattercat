@@ -2,7 +2,6 @@
     set_time_limit(0);
     ignore_user_abort(1);
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -23,15 +22,12 @@
         }
     }
     fclose($configFile);
-
-    $db = 'cc_' . $in["channel"];
-    $source = $in["source"];
-    $emote_id = $in["emote_id"];
-
+    $db = 'cc_' . $_POST["channel"];
+    $source = $_POST["source"];
+    $emote_id = $_POST["emote_id"];
     echo $db;
     echo $source;
     echo $emote_id;
-
     $conn = new mysqli($host, $user, $password, $db); 
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
@@ -40,11 +36,6 @@
         $sql = 'DELETE FROM emotes WHERE source = ' . $source . ' AND emote_id ="' . $emote_id . '";';
         $conn->query($sql);
         returnInfo();
-    }
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
     }
 
     function sendResultInfoAsJson( $obj )
@@ -58,7 +49,6 @@
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
     }
-    
     
     function returnInfo()
     {

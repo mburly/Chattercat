@@ -2,7 +2,6 @@
     set_time_limit(0);
     ignore_user_abort(1);
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -23,13 +22,11 @@
         }
     }
     fclose($configFile);
-
-    $db = 'cc_' . $in["channel"];
-    $source = $in["source"];
-    $emote_id = $in["emote_id"];
-    $col = $in["type"];
-    $new_value = $in["new_value"];
-
+    $db = 'cc_' . $_POST["channel"];
+    $source = $_POST["source"];
+    $emote_id = $_POST["emote_id"];
+    $col = $_POST["type"];
+    $new_value = $_POST["new_value"];
     $conn = new mysqli($host, $user, $password, $db); 
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
@@ -43,11 +40,6 @@
         }
         $conn->query($sql);
         returnInfo();
-    }
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
     }
 
     function sendResultInfoAsJson( $obj )

@@ -1,6 +1,5 @@
 <?php
     ob_start();
-    $in = getRequestInfo();
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -26,8 +25,8 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $username = preg_replace( "/\r|\n/", "", $in["username"] );
-        $password = preg_replace( "/\r|\n/", "", md5($in["password"]));
+        $username = preg_replace( "/\r|\n/", "", $_POST["username"] );
+        $password = preg_replace( "/\r|\n/", "", md5($_POST["password"]));
         $sql = 'SELECT id FROM admins WHERE username = "' . $username . '" AND password = "' . $password . '";';
         $result = $conn->query($sql);
         if($result->num_rows > 0) {
@@ -55,12 +54,6 @@
         return substr(implode($word), 0, $len);
     }
 
-
-    function getRequestInfo()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
-
     function sendResultInfoAsJson( $obj )
     {
         header('Content-Type: text/html');
@@ -71,12 +64,6 @@
     {
         $retValue = '{"id":0,"error":"' . $err . '"}';
         sendResultInfoAsJson( $retValue );
-    }
-    
-    function returnWithInfo($items)
-    {
-        $retVal = '{"results":[' . $items . '],"error":""}';
-        sendResultInfoAsJson($retVal);
     }
     
     function returnInfo($status)
