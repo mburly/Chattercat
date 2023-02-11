@@ -62,7 +62,6 @@ class Counter {
 	}
 }
 
-
 function loadConsole() {
     $.get("php/admin.php", function(data, status) {
         var data = JSON.parse(data);

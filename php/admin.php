@@ -1,4 +1,5 @@
 <?php
+    ini_set('display_errors', 1);
     set_time_limit(0);
     ignore_user_abort(1);
     ob_start();
@@ -91,9 +92,9 @@
                 $cwd = getcwd();
                 $dir = explode("php", $cwd)[0] . "emotes";
                 $dirs = array();
-                array_push($dirs, $dir . "\\twitch");
-                array_push($dirs, $dir . "\\bttv");
-                array_push($dirs, $dir . "\\ffz");
+                array_push($dirs, $dir . "/twitch");
+                array_push($dirs, $dir . "/bttv");
+                array_push($dirs, $dir . "/ffz");
                 $numEmotes = 0;
                 $numTwitchEmotes = 0;
                 $numBTTVEmotes = 0;
