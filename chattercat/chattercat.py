@@ -1,8 +1,8 @@
 import socket
 import time
 
-from chattercat.constants import ADDRESS, ADMIN_DB_NAME, ERROR_MESSAGES, TIMERS
-from chattercat.db import Database, connectAdmin
+from chattercat.constants import ADDRESS, ERROR_MESSAGES, TIMERS
+from chattercat.db import Database
 import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
@@ -44,7 +44,7 @@ class Chattercat:
                             game_id = int(self.stream['game_id'])
                         except:
                             game_id = 0    # No game set
-                        if(self.db.game_id != game_id):
+                        if(self.db.gameId != game_id):
                             self.db.addSegment(self.stream)
                         self.live_clock = time.time()
                     else:
@@ -52,6 +52,8 @@ class Chattercat:
                             self.sock.close()
                         self.running = False
                 if(utils.elapsedTime(self.socket_clock) >= TIMERS['socket']):
+                    # self.db.disconnect()
+                    # self.db.connect()
                     self.restartSocket()
                 try:
                     self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
@@ -70,14 +72,7 @@ class Chattercat:
     
     def start(self):
         try:
-            self.admin = connectAdmin(ADMIN_DB_NAME)
             utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name))
-            try:
-                sql = f'INSERT INTO executionlog (type, channel, message, datetime) VALUES (1,"{self.channel_name}", "{utils.statusMessage(self.channel_name)}", UTC_TIMESTAMP());'
-                self.admin.cursor().execute(sql)
-                self.admin.commit()
-            except Exception as e:
-                print(e)
             self.db = Database(self.channel_name)
             if(self.db.startSession(self.stream) is None):
                 return None
@@ -87,13 +82,8 @@ class Chattercat:
 
     def end(self):
         self.db.endSession()
-        self.db.cursor.close()
-        self.db.db.close()
         self.live = False
         utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name, online=False))
-        sql = f'INSERT INTO executionlog (type, channel, message, datetime) VALUES (1,"{self.channel_name}", "{utils.statusMessage(self.channel_name, online=False)}", UTC_TIMESTAMP());'
-        self.admin.cursor().execute(sql)
-        self.admin.commit()
 
     def endExecution(self):
         if(self.sock is not None):

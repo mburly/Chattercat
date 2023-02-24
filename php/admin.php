@@ -42,6 +42,12 @@
                 $numChannels = count($channels);
                 $executing = 0;
                 $executeStart = null;
+                $numChannelsOnline = 0;
+                $numMessages = 0;
+                $consoleDatetimes = array();
+                $consoleTypes = array();
+                $consoleChannels = array();
+                $consoleMessages = array();
                 $sql = 'SELECT * FROM executions ORDER BY id DESC LIMIT 1;';
                 $result = $conn->query($sql);
                 if($result->num_rows > 0) {
@@ -51,8 +57,6 @@
                             $executeStart = $row["start"];
                         }
                     }
-                    $numChannelsOnline = 0;
-                    $numMessages = 0;
                     foreach($channels as $channel) {
                         $conn2 = new mysqli($host, $user, $password, $channel);
                         if($conn2->connect_error) {
@@ -77,10 +81,6 @@
                     }
                     $sql = 'SELECT * FROM executionlog ORDER BY id DESC LIMIT 100;';
                     $result = $conn->query($sql);
-                    $consoleDatetimes = array();
-                    $consoleTypes = array();
-                    $consoleChannels = array();
-                    $consoleMessages = array();
                     while($row = $result->fetch_assoc()) {
                         array_push($consoleDatetimes, $row["datetime"]);
                         array_push($consoleTypes, $row["type"]);

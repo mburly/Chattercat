@@ -24,6 +24,12 @@ function callIndex() {
             var channelName = data["channels"][i];
             var selectId = channelName + '-select';
             var infoId = channelName + '-info';
+            try {
+                var channel = data[channelName];
+            }
+            catch {
+                continue;
+            }
             if(data["live"][i] == true)
             {
                 var streamStartDatetime = data[channelName]["streamStartDate"].split(' ');
