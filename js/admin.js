@@ -465,7 +465,6 @@ function loadAdmins() {
 
 function loadStatus() {
     $.get("php/status.php", function(data, status) {
-        console.log(data);
         var data = JSON.parse(data);
         if(data["status"] == "online") {
             remove("statusLoader");

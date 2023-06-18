@@ -164,8 +164,6 @@ function listeners() {
     $('body').on('click','#loginButton',function(){
         var user = $('#username').val();
         var pass = $('#password').val();
-        console.log(user);
-        console.log(pass);
         $.post("php/login.php", {username: user, password: pass})
         .done(function(data) {
             data = JSON.parse(data);

@@ -52,8 +52,8 @@ class Chattercat:
                             self.sock.close()
                         self.running = False
                 if(utils.elapsedTime(self.socket_clock) >= TIMERS['socket']):
-                    # self.db.disconnect()
-                    # self.db.connect()
+                    self.db.disconnect()
+                    self.db.connect()
                     self.restartSocket()
                 try:
                     self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
@@ -67,7 +67,6 @@ class Chattercat:
                     self.db.log(Response(self.channel_name, resp))
         except:
             self.endExecution()
-
             utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name))
     
     def start(self):
@@ -82,6 +81,7 @@ class Chattercat:
 
     def end(self):
         self.db.endSession()
+        self.db.disconnect()
         self.live = False
         utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name, online=False))
 
@@ -89,6 +89,7 @@ class Chattercat:
         if(self.sock is not None):
                 self.sock.close()
         self.db.endSession()
+        self.db.disconnect()
         self.running = False
         self.executing = False
 
