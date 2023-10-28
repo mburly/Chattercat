@@ -320,9 +320,12 @@ function loadChannelPage(id)
                 const emotesHead = '<div class="list-group-header">Top Emotes</div>';
                 $('#emotesWindowBody').append(emotesHead);
                 $('#emotesWindowBody').append('<ul id="topEmotesList">');
-                var source = "Twitch";
+                var source = "";
                 for(let i = 0; i < data["topEmotePaths"].length; i++)
                 {
+                    if(data["topEmoteSources"][i] == 1) {
+                        source = "Twitch";
+                    }
                     if(data["topEmoteSources"][i] == 2) {
                         source = "Subscriber";
                     }
