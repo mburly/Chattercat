@@ -1030,6 +1030,15 @@ hr {
     text-overflow: ellipsis;
 }
 
+._7TV-emote {
+    background-color: #1f3f00;
+    color: white;
+    margin-top: 5px;
+    padding: 2px;
+    border-radius: 8%;
+    opacity: 0.5;
+}
+
 .Twitch-emote, .Subscriber-emote {
     background-color:purple;
     color:white;

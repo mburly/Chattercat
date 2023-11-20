@@ -33,7 +33,7 @@
             if(strpos($db["Database"], "cc_") !== false && strpos($db["Database"], "housekeeping") == false)
             {
                 array_push($channels, $db["Database"]);
-                $channelNames .=  '"' . ltrim($db["Database"], "cc_") . '", ';
+                $channelNames .=  '"' . substr($db["Database"], strpos($db["Database"], '_') + 1) . '", ';
             }
         }
         $channelNames = substr($channelNames, 0, -2);
@@ -66,7 +66,7 @@
                     array_push($liveTimes, $result["start_datetime"]);
                     $sql = "SELECT stream_title FROM segments ORDER BY ID DESC LIMIT 1;";
                     $result = $conn->query($sql)->fetch_assoc();
-                    array_push($liveChannels, ltrim($channel, "cc_"));
+                    array_push($liveChannels, substr($channel, strpos($channel, '_') + 1));
                     array_push($liveTitles, addcslashes($result["stream_title"], '"\\/'));
                     $sql = "SELECT COUNT(id) AS num_messages, COUNT(DISTINCT chatter_id) as num_chatters FROM messages WHERE session_id = (SELECT MAX(id) FROM sessions);";
                     $result = $conn->query($sql)->fetch_assoc();

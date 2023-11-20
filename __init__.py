@@ -2,7 +2,6 @@ import multiprocessing
 import os
 
 from chattercat.chattercat import Chattercat
-import chattercat.db as db
 from chattercat.utils import verify
 
 if __name__ == '__main__':
@@ -13,5 +12,4 @@ if __name__ == '__main__':
         out = pool.map(Chattercat,streams)
         pool.close()
     except KeyboardInterrupt:
-        db.updateExecution()
         pool.close()

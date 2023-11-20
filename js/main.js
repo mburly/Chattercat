@@ -181,6 +181,7 @@ function listeners() {
         $.post("php/emotes.php", {channel: channel})
         .done(function(data) {
             data = JSON.parse(data);
+            console.log(data);
             if(state == 'main') {
                 hide(state);
             }
@@ -199,7 +200,11 @@ function listeners() {
                 else if(data["sources"][i] == 5 || data["sources"][i] == 6) {
                     source = "BTTV";
                 }
-                $('.channel-emotes').append('<li class="channel-emotes-list-emote"><div class="channel-emote-holder"><div class="tooltip-top"><img class="channel-emote channel-emote-image" src="' + data["paths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"]["i"] + '-tooltip" src="' + data["paths"][i] + '"></span></div><span class="channel-emote-name" title="' + data["codes"][i] + '">' + data["codes"][i] + '</span><span class="channel-emote-type ' + source + '-emote" style="margin-top:5px;">' + source + '</span></div></li>');
+                else if(data["sources"][i] == 7 || data["sources"][i] == 8) {
+                    source = "7TV";
+                }
+                var sourceClass = source == "7TV" ? "_7TV" : source;
+                $('.channel-emotes').append('<li class="channel-emotes-list-emote"><div class="channel-emote-holder"><div class="tooltip-top"><img class="channel-emote channel-emote-image" src="' + data["paths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"]["i"] + '-tooltip" src="' + data["paths"][i] + '"></span></div><span class="channel-emote-name" title="' + data["codes"][i] + '">' + data["codes"][i] + '</span><span class="channel-emote-type ' + sourceClass + '-emote" style="margin-top:5px;">' + source + '</span></div></li>');
             }
             state = "channelEmotes";
         });
@@ -335,7 +340,11 @@ function loadChannelPage(id)
                     else if(data["topEmoteSources"][i] == 5 || data["topEmoteSources"][i] == 6) {
                         source = "BTTV";
                     }
-                    $('#topEmotesList').append('<li class="emote-item"><span class="emote-source ' + source + '-emote">' + source + '</span><div class="tooltip-top"><img class="emote" src="' + data["topEmotePaths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["topEmoteCodes"][i] + '-tooltip" src="' + data["topEmotePaths"][i] + '"></span></div><div class="emote-name-section"><span class="emote-name">' + data["topEmoteCodes"][i] + '</span></div><span class="emote-count">' + data["topEmoteCounts"][i].toLocaleString("en-US") + '</span></li>');
+                    else if(data["topEmoteSources"][i] == 7 || data["topEmoteSources"][i] == 8) {
+                        source = "7TV";
+                    }
+                    var sourceClass = source == "7TV" ? "_7TV" : source;
+                    $('#topEmotesList').append('<li class="emote-item"><span class="emote-source ' + sourceClass + '-emote">' + source + '</span><div class="tooltip-top"><img class="emote" src="' + data["topEmotePaths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["topEmoteCodes"][i] + '-tooltip" src="' + data["topEmotePaths"][i] + '"></span></div><div class="emote-name-section"><span class="emote-name">' + data["topEmoteCodes"][i] + '</span></div><span class="emote-count">' + data["topEmoteCounts"][i].toLocaleString("en-US") + '</span></li>');
                 }
                 $('#emotesWindowBody').append('<button class="channel-emotes-button" id="' + channel + '-ChannelEmotesButton">View ' + channel + '\'s emotes</button>');
                 $('#emotesStatusBar').append('<p class="status-bar-field"><span class="status-bar-right">Total emotes: ' + data["totalEmotes"].toLocaleString("en-US") + '</span></p>');

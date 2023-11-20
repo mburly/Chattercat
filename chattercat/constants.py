@@ -19,14 +19,17 @@ DIRS = { 'emotes':'emotes',
          'twitch':'emotes/twitch', 
          'bttv':'emotes/bttv', 
          'ffz':'emotes/ffz',
+         '7tv':'emotes/7tv',
          'pictures':'pictures',
          'pictures_archive':'pictures/archive' }
 API_URLS = { 'twitch':'https://api.twitch.tv/helix',
              'ffz':'https://api.frankerfacez.com/v1',
-             'bttv':'https://api.betterttv.net/3/cached' }
+             'bttv':'https://api.betterttv.net/3/cached',
+             '7tv':'https://7tv.io/v3' }
 CDN_URLS = { 'twitch':'https://static-cdn.jtvnw.net/emoticons/v2',
              'ffz':'https://cdn.frankerfacez.com/emote',
-             'bttv':'https://cdn.betterttv.net/emote' }
+             'bttv':'https://cdn.betterttv.net/emote',
+             '7tv':'https://cdn.7tv.app/emote/#/4x.webp' }
 OAUTH_URL = 'https://id.twitch.tv/oauth2'
 SERVER_URL = 'tmi.twitch.tv'
 COLORS = { 'clear':'\033[0m',
@@ -36,7 +39,7 @@ COLORS = { 'clear':'\033[0m',
            'hi_red':'\033[0;91m' }
 BANNER = f'{COLORS["bold_purple"]}{pyfiglet.figlet_format("Chattercat", font="speed")}{COLORS["clear"]}'
 VERSION = '1.1'
-EMOTE_TYPES = ['twitch','subscriber','ffz','ffz_channel','bttv','bttv_channel']
+EMOTE_TYPES = ['twitch','subscriber','ffz','ffz_channel','bttv','bttv_channel','7tv','7tv_channel']
 DEBUG_MESSAGES = { 'set_emote':'Setting emote:',
                    'inactive':'now inactive.',
                    'reactivated':'now reactivated.' }

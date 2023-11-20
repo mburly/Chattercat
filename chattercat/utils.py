@@ -5,16 +5,10 @@ import time
 
 import requests
 
-import chattercat.constants as constants
+from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, STREAMS, TWITCH_VARIABLES
 import chattercat.db as db
 import chattercat.twitch as twitch
 
-COLORS = constants.COLORS
-CONFIG_SECTIONS = constants.CONFIG_SECTIONS
-DB_VARIABLES = constants.DB_VARIABLES
-DIRS = constants.DIRS
-ERROR_MESSAGES = constants.ERROR_MESSAGES
-TWITCH_VARIABLES = constants.TWITCH_VARIABLES
 
 class InvalidConfigValue(Exception):
     pass
@@ -22,19 +16,19 @@ class InvalidConfigValue(Exception):
 class Config:
     def __init__(self):
         self.config = configparser.ConfigParser()
-        self.config.read(constants.CONFIG_NAME)
+        self.config.read(CONFIG_NAME)
         self.host= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['host']]
         self.user= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['user']]
         self.password = self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['password']]
         self.nickname = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['nickname']]
         self.token = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['token']]
-        self.client_id = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['client_id']]
-        self.secret_key = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['secret_key']]
+        self.clientId = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['client_id']]
+        self.secretKey = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['secret_key']]
 
 class Response:
-    def __init__(self, channel_name, response):
+    def __init__(self, channelName, response):
         self.response = response
-        self.channel_name = channel_name
+        self.channelName = channelName
         self.username = self.parseUsername()
         self.message = self.parseMessage()
         if(self.username == self.message):
@@ -54,7 +48,7 @@ class Response:
 
     def parseMessage(self):
         try:
-            return self.response.split(f'#{self.channel_name} :')[1]
+            return self.response.split(f'#{self.channelName} :')[1]
         except:
             return None
 
@@ -88,37 +82,37 @@ def getDateTime(sys=False):
     sec = '0' if cur.tm_sec < 10 else ''
     return f'{str(cur.tm_year)}-{mon}{str(cur.tm_mon)}-{day}{str(cur.tm_mday)} {hour}{str(cur.tm_hour)}:{min}{str(cur.tm_min)}:{sec}{str(cur.tm_sec)}'
 
-def getNumPhotos(channel_name):
-    counter = 0;
+def getNumPhotos(channelName):
+    counter = 0
     for photo in os.listdir(DIRS['pictures_archive']):
         channel = photo.split('-')[0]
-        if(channel == channel_name):
+        if(channel == channelName):
             counter += 1
     return counter
 
 def getStreamNames():
     streams = []
-    for stream in open(constants.STREAMS, 'r'):
+    for stream in open(STREAMS, 'r'):
         streams.append(stream.replace('\n',''))
     return streams
 
-def removeSymbolsFromName(emote_name):
+def removeSymbolsFromName(emoteName):
     counter = 0
-    for character in constants.BAD_FILE_CHARS:
-        if character in emote_name:
-            emote_name = emote_name.replace(character, str(counter))
+    for character in BAD_FILE_CHARS:
+        if character in emoteName:
+            emoteName = emoteName.replace(character, str(counter))
             counter += 1
-    return emote_name
+    return emoteName
             
-def parseMessageEmotes(channel_emotes, message):
+def parseMessageEmotes(channelEmotes, message):
     if(type(message) == list):
         return []
     words = message.split(' ')
-    parsed_emotes = []
+    parsedEmotes = []
     for word in words:
-        if word in channel_emotes and word not in parsed_emotes:
-            parsed_emotes.append(word)
-    return parsed_emotes
+        if word in channelEmotes and word not in parsedEmotes:
+            parsedEmotes.append(word)
+    return parsedEmotes
 
 def verify():
     printBanner()
@@ -138,16 +132,16 @@ def verify():
 
 def printBanner():
     cls()
-    print(f'\n{constants.BANNER}')
+    print(f'\n{BANNER}')
 
-def printError(channel_name, text):
-    print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channel_name if(channel_name is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_red"]}ERROR{COLORS["clear"]}] {text}')
+def printError(channelName, message):
+    print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channelName if(channelName is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_red"]}ERROR{COLORS["clear"]}] {message}')
 
-def printInfo(channel_name, text):
-    print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channel_name if(channel_name is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_green"]}INFO{COLORS["clear"]}] {text}')
+def printInfo(channelName, message):
+    print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channelName if(channelName is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_green"]}INFO{COLORS["clear"]}] {message}')
 
-def statusMessage(channel_name, online=True):
-    return f'{channel_name} just went live!' if online else f'{channel_name} is now offline.'
+def statusMessage(channelName, online=True):
+    return f'{channelName} just went live!' if online else f'{channelName} is now offline.'
 
-def downloadMessage(new_emote_count):
-    return f'Downloaded {new_emote_count} newly active emotes.'
+def downloadMessage(newEmoteCount):
+    return f'Downloaded {newEmoteCount} newly active emotes.'

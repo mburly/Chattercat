@@ -26,7 +26,7 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = "SELECT code, count, path, source FROM emotes GROUP BY code ORDER BY count DESC LIMIT 10;";
+        $sql = "SELECT code, count, path, source FROM emotes GROUP BY code ORDER BY count DESC, code LIMIT 10;";
         $result = $conn->query($sql);
         $topEmoteCodes = '';
         $topEmoteCounts = '';
