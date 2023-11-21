@@ -43,6 +43,8 @@ class Chattercat:
             return None
 
     def run(self):
+        if(self.db is None):
+            utils.printInfo(self.channelName, f'DB is currently none [1]: {self.db}')
         self.db.getChannelActiveEmotes()
         self.startSocket()
         self.liveClock = time.time()
@@ -60,6 +62,8 @@ class Chattercat:
                                 game_id = int(self.stream['game_id'])
                             except:
                                 game_id = 0    # No game set
+                            if(self.db is None):
+                                utils.printInfo(self.channelName, f'DB is currently none [2]: {self.db}')
                             if(self.db.gameId != game_id):
                                 self.db.addSegment(self.stream)
                             self.liveClock = time.time()
@@ -69,6 +73,8 @@ class Chattercat:
                             self.running = False
                             break
                     if(utils.elapsedTime(self.socketClock) >= TIMERS['socket']):
+                        if(self.db is None):
+                            utils.printInfo(self.channelName, f'DB is currently none [3]: {self.db}')
                         self.db.disconnect()
                         self.db.connect()
                         self.restartSocket()
@@ -83,6 +89,8 @@ class Chattercat:
                         self.restartSocket()
                     for resp in self.getResponses():
                         try:
+                            if(self.db is None):
+                                utils.printInfo(self.channelName, f'DB is currently none [4]: {self.db}')
                             self.db.log(Response(self.channelName, resp))
                         except Exception as e:
                             utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
