@@ -15,24 +15,21 @@ class Emote:
 
 def getAllChannelEmotes(channelName):
     channelId = getChannelId(channelName)
+    channelEmotes = {}
+    channelEmotes[EMOTE_TYPES[0]] = getTwitchEmotes()
+    channelEmotes[EMOTE_TYPES[1]] = getTwitchEmotes(channelName)
+    channelEmotes[EMOTE_TYPES[2]] = getFFZEmotes()
+    channelEmotes[EMOTE_TYPES[3]] = getFFZEmotes(channelId)
+    channelEmotes[EMOTE_TYPES[4]] = getBTTVEmotes()
+    channelEmotes[EMOTE_TYPES[5]] = getBTTVEmotes(channelId)
     try:
-        channelEmotes = {}
-        channelEmotes[EMOTE_TYPES[0]] = getTwitchEmotes()
-        channelEmotes[EMOTE_TYPES[1]] = getTwitchEmotes(channelName)
-        channelEmotes[EMOTE_TYPES[2]] = getFFZEmotes()
-        channelEmotes[EMOTE_TYPES[3]] = getFFZEmotes(channelId)
-        try:
-            channelEmotes[EMOTE_TYPES[4]] = getBTTVEmotes()
-        except Exception as e:
-            utils.printInfo(channelName, f'Exception BTTV[1]: {e}')
-        try:
-            channelEmotes[EMOTE_TYPES[5]] = getBTTVEmotes(channelId)
-        except Exception as e:
-            utils.printInfo(channelName, f'Exception BTTV[2]: {e}')
         channelEmotes[EMOTE_TYPES[6]] = get7TVEmotes()
+    except Exception as e:
+        utils.printInfo(channelName, f'1: {e}')
+    try:
         channelEmotes[EMOTE_TYPES[7]] = get7TVEmotes(channelId)
     except Exception as e:
-        utils.printInfo(channelName, f'Exception getAllChannelEmotes: {e}')
+        utils.printInfo(channelName, f'2: {e}')
     return channelEmotes
 
 def get7TVEmotes(channelId=None):
@@ -69,7 +66,8 @@ def getBTTVEmoteById(channelId, emoteId) -> Emote:
         for emote in emotes:
             if(emote['id'] == emoteId):
                 return Emote(emoteId, emote['code'], f'{CDN_URLS["bttv"]}/{emoteId}/3x.{emote["imageType"]}')
-    except:
+    except Exception as e:
+        utils.printInfo(channelId, f'Exception in getBTTVEmoteById: {e}')
         return None
 
 def getBTTVEmotes(channelId=None):
@@ -84,7 +82,8 @@ def getBTTVEmotes(channelId=None):
         emotes = requests.get(url,params=None,headers=None).json()
         try:
             channelEmotes = emotes['channelEmotes']
-        except:
+        except Exception as e:
+            utils.printInfo(channelId, f'Exception in getBTTVEmotes: {e}')
             return None
         if(len(channelEmotes) != 0):
             for i in range(0, len(channelEmotes)):
@@ -103,7 +102,8 @@ def getBTTVEmotes(channelId=None):
 def getChannelId(channelName):
     try:
         return int(getChannelInfo(channelName)['id'])
-    except:
+    except Exception as e:
+        utils.printInfo(channelName, f'Exception in getChannelId: {e}')
         return None
 
 def getChannelInfo(channelName):
@@ -113,7 +113,8 @@ def getChannelInfo(channelName):
         if('error' in resp.keys()):
             return None
         return resp['data'][0]
-    except:
+    except Exception as e:
+        utils.printInfo(channelName, f'Exception in getChannelInfo: {e}')
         return None
 
 def getChatterColor(chatterName):
@@ -143,7 +144,8 @@ def getFFZEmoteById(emoteId) -> Emote:
             return Emote(emoteId, emote['emote']['name'], f'{CDN_URLS["ffz"]}/{emoteId}/1')
         else:
             return Emote(emoteId, emote['emote']['name'], f'{CDN_URLS["ffz"]}/{emoteId}/4')
-    except:
+    except Exception as e:
+        utils.printInfo(emoteId, f'Exception in getFFZEmoteById: {e}')
         return None
 
 def getFFZEmotes(channelId=None):
@@ -181,7 +183,8 @@ def getOAuth(clientId, clientSecret):
             constants.OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
         )
         return response.json()['access_token']
-    except:
+    except Exception as e:
+        utils.printInfo(None, f'Exception in getOAuth: {e}')
         return None
 
 def getStreamInfo(channelName):
@@ -189,6 +192,7 @@ def getStreamInfo(channelName):
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except requests.ConnectionError:
+        utils.printInfo(channelName, f'getStreamInfo (connection error)')
         return None
     respKeys = resp.keys()
     if('error' in respKeys):
@@ -208,7 +212,8 @@ def getTwitchEmoteById(channelId, emoteId, source) -> Emote:
         for emote in emotes:
             if(emoteId == emote['id']):
                 return Emote(emoteId, emote['name'], emote['images']['url_4x'])
-    except:
+    except Exception as e:
+        utils.printInfo(channelId, f'Exception in getTwitchEmoteById: {e}')
         return None
 
 def getTwitchEmotes(channelName=None):
@@ -232,5 +237,6 @@ def getTwitchEmotes(channelName=None):
             emote = Emote(emotes[i]['id'], emotes[i]['name'], url)
             emoteSet.append(emote)
         return emoteSet
-    except:
+    except Exception as e:
+        utils.printInfo(channelName, f'Exception in getTwitchEmotes: {e}')
         return None
