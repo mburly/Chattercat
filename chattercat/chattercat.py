@@ -38,7 +38,7 @@ class Chattercat:
                         if self.stream is None:
                             time.sleep(TIMERS['sleep'])
                 except Exception as e:
-                    utils.printInfo(self.channelName, f'executing Exception: {e}')
+                    utils.printInfo(self.channelName, f'executing() Exception: {e}')
         except KeyboardInterrupt:
             return None
 
@@ -94,14 +94,11 @@ class Chattercat:
             utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
     
     def start(self):
-        try:
-            utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
-            self.db = Database(self.channelName)
-            if(self.db.startSession(self.stream) is None):
-                return None
-            self.running = True
-        except:
+        utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
+        self.db = Database(self.channelName)
+        if(self.db.startSession(self.stream) is None):
             return None
+        self.running = True
 
     def end(self):
         self.db.endSession()
@@ -124,8 +121,9 @@ class Chattercat:
             self.sock.send(f'PASS {self.db.config.token}\n'.encode('utf-8'))
             self.sock.send(f'NICK {self.db.config.nickname}\n'.encode('utf-8'))
             self.sock.send(f'JOIN #{self.channelName}\n'.encode('utf-8'))
-        except:
+        except Exception as e:
             utils.printError(self.channelName, ERROR_MESSAGES['host'])
+            utils.printError(self.channelName, f'Extended eror info: {e}')
             self.db.endSession()
             return None
 
