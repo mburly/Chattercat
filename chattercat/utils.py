@@ -43,20 +43,18 @@ class Response:
     def parseUsername(self):
         try:
             return self.response.split('!')[0].split(':')[1]
-        except:
+        except Exception as e:
+            printError(self.channelName, f'parseUsername() error: {e}')
             return None
 
     def parseMessage(self):
-        try:
-            return self.response.split(f'#{self.channelName} :')[1]
-        except:
-            return None
+            return self.response.split(f'#{self.channelName} :')[1] if len(self.response.split(f'#{self.channelName} :')) > 1 else None
 
 def cls():
     os.system('cls' if os.name=='nt' else 'clear')
 
 def downloadFile(url, fileName):
-    if not os.path.exists(fileName):
+    if(not os.path.exists(fileName)):
         r = requests.get(url)
         with open(fileName, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024): 

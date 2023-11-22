@@ -26,7 +26,7 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = "SELECT code, count, path, source FROM emotes GROUP BY code ORDER BY count DESC, code LIMIT 10;";
+        $sql = "SELECT code, count, path, source FROM top_emotes";
         $result = $conn->query($sql);
         $topEmoteCodes = '';
         $topEmoteCounts = '';
@@ -47,7 +47,7 @@
         $result = $conn->query($sql);
         $numEmotes = $result->fetch_assoc()["num_emotes"];
 
-        $sql = "SELECT (SELECT username FROM chatters WHERE id = chatter_id) AS username, COUNT(id) AS message_count FROM messages GROUP BY chatter_id ORDER BY COUNT(id) DESC LIMIT 5;";
+        $sql = "SELECT username, message_count FROM top_chatters;";
         $result = $conn->query($sql);
         $topChatterNames = '';
         $topChatterCounts = '';
@@ -62,7 +62,7 @@
         $result = $conn->query($sql);
         $numChatters = $result->fetch_assoc()["num_chatters"];
 
-        $sql = "SELECT DISTINCT (SELECT username FROM chatters WHERE id = chatter_id) AS username FROM messages GROUP BY id ORDER BY id DESC LIMIT 9;";
+        $sql = "SELECT username FROM recent_chatters;";
         $result = $conn->query($sql);
         $recentChatterNames = '';
         while($recent_chatter = $result -> fetch_assoc()) {
@@ -78,7 +78,7 @@
         $result = $conn->query($sql);
         $numMessages = $result->fetch_assoc()["num_messages"];
 
-        $sql = "SELECT (SELECT username FROM chatters WHERE id = chatter_id) AS username, message, datetime FROM messages ORDER BY id DESC LIMIT 20;";
+        $sql = "SELECT username, message, datetime FROM recent_messages;";
         $result = $conn->query($sql);
         $recentMessageNames = '';
         $recentMessageMessages = '';
@@ -111,7 +111,7 @@
         $recentSessionStartDatetimes = substr($recentSessionStartDatetimes, 0, -2);
         $recentSessionLengths = substr($recentSessionLengths, 0, -2);
 
-        $sql = "SELECT g.name, s.length, s.stream_title, s.session_id FROM games g INNER JOIN segments s ON g.id=s.game_id WHERE s.session_id IN (SELECT * FROM (SELECT id FROM sessions ORDER BY id DESC) AS t) ORDER BY s.id DESC;";
+        $sql = "SELECT name, length, stream_title, session_id FROM recent_segments;";
         $result = $conn->query($sql);
         $recentSegmentCategories = '';
         $recentSegmentLengths = '';

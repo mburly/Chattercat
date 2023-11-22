@@ -35,7 +35,7 @@ class Chattercat:
                             file.write(f'{utils.getDateTime()} {self.channelName} PING [ended].\n')
                     else:
                         self.stream = twitch.getStreamInfo(self.channelName)
-                        if self.stream is None:
+                        if(self.stream is None):
                             time.sleep(TIMERS['sleep'])
                 except Exception as e:
                     utils.printInfo(self.channelName, f'executing() Exception: {e}')
@@ -80,7 +80,7 @@ class Chattercat:
                         self.restartSocket()
                     try:
                         self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
-                        if self.resp == '' :
+                        if(self.resp == ''):
                             self.restartSocket()
                     except KeyboardInterrupt:
                         self.endExecution()

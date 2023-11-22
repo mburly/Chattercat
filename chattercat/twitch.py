@@ -170,25 +170,23 @@ def getHeaders():
             "Client-Id": config.clientId}
 
 def getOAuth(clientId, clientSecret):
-    try:
-        response = requests.post(
-            constants.OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
-        )
-        return response.json()['access_token']
-    except Exception as e:
-        utils.printInfo(None, f'Exception in getOAuth: {e}')
-        return None
-
+    response = requests.post(
+        constants.OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
+    )
+    resp = response.json()
+    if('access_token' in resp.keys()):
+        return resp['access_token']
+    return None
+    
 def getStreamInfo(channelName):
     url = f'{API_URLS["twitch"]}/streams?user_login={channelName}'
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except requests.ConnectionError:
-        utils.printInfo(channelName, f'getStreamInfo (connection error)')
         return None
     respKeys = resp.keys()
     if('error' in respKeys):
-        utils.printInfo(channelName, resp['error'])
+        utils.printError(channelName, resp['error'])
         return None
     if('data' in respKeys):
         if(len(resp['data']) == 0):
@@ -212,19 +210,22 @@ def getTwitchEmotes(channelName=None):
     else:
         url = f'{API_URLS["twitch"]}/chat/emotes?broadcaster_id={getChannelId(channelName)}'
     resp = requests.get(url,params=None,headers=getHeaders()).json()
-    if('data' in resp.keys()):
-        emotes = resp['data']
-        if(emotes == []):
-            return None
-        for i in range(0, len(emotes)):
-            if '3.0' in emotes[i]['scale']:
-                if 'animated' in emotes[i]['format']:
-                    url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/animated/light/3.0'
+    try:
+        if('data' in resp.keys()):
+            emotes = resp['data']
+            if(emotes == []):
+                return None
+            for i in range(0, len(emotes)):
+                if('3.0' in emotes[i]['scale']):
+                    if('animated' in emotes[i]['format']):
+                        url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/animated/light/3.0'
+                    else:
+                        url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/static/light/3.0'
                 else:
-                    url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/static/light/3.0'
-            else:
-                url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/static/light/1.0'
-            emote = Emote(emotes[i]['id'], emotes[i]['name'], url)
-            emoteSet.append(emote)
-        return emoteSet
+                    url = f'{CDN_URLS["twitch"]}/{emotes[i]["id"]}/static/light/1.0'
+                emote = Emote(emotes[i]['id'], emotes[i]['name'], url)
+                emoteSet.append(emote)
+            return emoteSet
+    except Exception as e:
+        utils.printError(channelName, f'getTwitchEmotes(): {e}')
     return emoteSet

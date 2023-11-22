@@ -23,9 +23,9 @@ class Database:
             self.connect()
 
     def commit(self, sql):
-        if not self.db.is_connected():
+        if(not self.db.is_connected()):
             self.connect()
-        if isinstance(sql, list):
+        if(isinstance(sql, list)):
             for stmt in sql:
                 self.cursor.execute(stmt)
             self.db.commit()
@@ -46,9 +46,9 @@ class Database:
             self.db = None
 
     def disconnect(self):
-        if self.cursor is not None:
+        if(self.cursor is not None):
             self.cursor.close()
-        if self.db is not None:
+        if(self.db is not None):
             self.db.close()
             
     def createChannelDb(self):
@@ -58,8 +58,10 @@ class Database:
         cursor.close()
         db.close()
         self.connect()
-        self.commit([self.stmtCreateChattersTable(),self.stmtCreateSessionsTable(),self.stmtCreateGamesTable(),self.stmtCreateSegmentsTable(),
-                     self.stmtCreateMessagesTable(),self.stmtCreateEmotesTable(),self.stmtCreateLogsTable()])
+        self.commit([self.stmtCreateChattersTable(), self.stmtCreateSessionsTable(), self.stmtCreateGamesTable(), self.stmtCreateSegmentsTable(),
+                     self.stmtCreateMessagesTable(), self.stmtCreateEmotesTable(), self.stmtCreateEmoteLogsTable(), self.stmtCreateRecentSessionsView(),
+                     self.stmtCreateTopChattersView(), self.stmtCreateTopEmotesView(), self.stmtCreateRecentSegmentsView(),
+                     self.stmtCreateRecentMessagesView(), self.stmtCreateRecentChattersView()])
         try:
             self.commit(self.stmtCreateEmoteStatusChangeTrigger())
         except Exception as e:
@@ -108,16 +110,16 @@ class Database:
         self.commit(self.stmtInsertNewEmote(emote, source))
 
     def logMessage(self, chatterId, message):
-        if "\"" in message:
+        if("\"" in message):
             message = message.replace("\"", "\'")
-        if '\\' in message:
+        if('\\' in message):
             message = message.replace('\\', '\\\\')
         self.commit([self.stmtInsertNewMessage(message, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
         
     def logMessageEmotes(self, message):
         messageEmotes = utils.parseMessageEmotes(self.channelEmotes, message)
         for emote in messageEmotes:
-            if '\\' in emote:
+            if('\\' in emote):
                 emote = emote.replace('\\','\\\\')
             self.commit(self.stmtUpdateEmoteCount(emote))
 
@@ -193,7 +195,7 @@ class Database:
 
     def downloadEmotes(self):
         for dir in DIRS.values():
-            if not os.path.exists(dir):
+            if(not os.path.exists(dir)):
                 os.mkdir(dir)
         self.downloadEmotesHelper()
 
@@ -287,16 +289,25 @@ class Database:
     def stmtCreateEmotesTable(self):
         return f'CREATE TABLE emotes (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(255) COLLATE utf8mb4_general_ci, emote_id VARCHAR(255) COLLATE utf8mb4_general_ci, count INT DEFAULT 0, url VARCHAR(512) COLLATE utf8mb4_general_ci, path VARCHAR(512) COLLATE utf8mb4_general_ci, date_added DATE, source VARCHAR(255) COLLATE utf8mb4_general_ci, active BOOLEAN) COLLATE utf8mb4_general_ci;'
 
-    def stmtCreateTopEmotesProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.topEmotes() BEGIN SELECT code, count, path FROM cc_{self.channelName}.EMOTES GROUP BY code ORDER BY count DESC LIMIT 10; END'
+    def stmtCreateTopEmotesView(self):
+        return f'CREATE VIEW top_emotes AS SELECT code, count, path, source FROM emotes GROUP BY code ORDER BY count DESC LIMIT 10;'
 
-    def stmtCreateTopChattersProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.topChatters() BEGIN SELECT c.username, COUNT(m.id) FROM cc_{self.channelName}.MESSAGES m INNER JOIN cc_{self.channelName}.CHATTERS c ON m.chatter_id=c.id GROUP BY c.username ORDER BY COUNT(m.id) DESC LIMIT 10; END'
+    def stmtCreateTopChattersView(self):
+        return f'CREATE VIEW top_chatters AS SELECT c.username, COUNT(m.id) AS message_count FROM messages m INNER JOIN chatters c ON m.chatter_id=c.id GROUP BY c.username ORDER BY COUNT(m.id) DESC LIMIT 5;'
 
-    def stmtCreateRecentSessionsProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.recentSessions() BEGIN SELECT id, (SELECT seg.stream_title FROM cc_{self.channelName}.sessions ses INNER JOIN cc_{self.channelName}.segments seg ON ses.id=seg.session_id ORDER BY seg.id DESC LIMIT 1), DATE_FORMAT(end_datetime, "%c/%e/%Y"), length FROM cc_{self.channelName}.sessions ORDER BY id DESC LIMIT 5; END'
+    def stmtCreateRecentChattersView(self):
+        return f'CREATE VIEW recent_chatters AS SELECT DISTINCT (SELECT username FROM chatters WHERE id = chatter_id) AS username FROM messages GROUP BY id ORDER BY id DESC LIMIT 9;'
+    
+    def stmtCreateRecentMessagesView(self):
+        return f'CREATE VIEW recent_messages AS SELECT (SELECT username FROM chatters WHERE id = chatter_id) AS username, message, datetime FROM messages ORDER BY id DESC LIMIT 20;'
 
-    def stmtCreateLogsTable(self):
+    def stmtCreateRecentSegmentsView(self):
+        return f'CREATE VIEW recent_segments AS SELECT g.name, s.length, s.stream_title, s.session_id FROM games g INNER JOIN segments s ON g.id=s.game_id WHERE s.session_id IN (SELECT * FROM (SELECT id FROM sessions ORDER BY id DESC) AS t) ORDER BY s.id DESC;'
+    
+    def stmtCreateRecentSessionsView(self):
+        return f'CREATE VIEW recent_sessions AS SELECT id, (SELECT seg.stream_title FROM sessions ses INNER JOIN segments seg ON ses.id=seg.session_id ORDER BY seg.id DESC LIMIT 1), DATE_FORMAT(end_datetime, "%c/%e/%Y"), length FROM sessions ORDER BY id DESC LIMIT 5'
+
+    def stmtCreateEmoteLogsTable(self):
         return f'CREATE TABLE logs (id INT AUTO_INCREMENT PRIMARY KEY, emote_id INT, old INT, new INT, user_id VARCHAR(512), datetime DATETIME, FOREIGN KEY (emote_id) REFERENCES emotes(id)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateGamesTable(self):
