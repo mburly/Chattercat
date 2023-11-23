@@ -131,6 +131,7 @@ def verify():
         sys.exit()
     if(db.verifyHKDb() is False):
         db.createHKDb()
+    db.addExecution()
     return streams
 
 def printBanner():

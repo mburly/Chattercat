@@ -402,6 +402,25 @@ class Database:
     def stmtUpdateSegmentLength(self):
         return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
 
+def addExecution():
+    db = connect("cc_housekeeping")
+    if(db is None):
+        return None
+    cursor = db.cursor()
+    if(cursor is None):
+        return None
+    try:
+        cursor.execute(stmtInsertExecution())
+        db.commit()
+    except:
+        if(cursor is not None):
+            cursor.close()
+        if(db is not None):
+            db.close()
+        return None
+    cursor.close()
+    db.close()
+
 def connect(dbName=None):
         try:
             c = Config()
@@ -427,7 +446,8 @@ def createHKDb():
         cursor.execute('USE cc_housekeeping;')
     except:
         return None
-    stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable()]
+    stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable(),
+             stmtCreateExecutionsTable()]
     try:
         for sql in stmts:
             cursor.execute(sql)
@@ -455,3 +475,12 @@ def stmtCreateAdminsTable():
 
 def stmtCreateAdminSessionsTable():
     return 'CREATE TABLE adminsessions (id INT AUTO_INCREMENT PRIMARY KEY, token VARCHAR(256), userId INT, datetime DATETIME, expires DATETIME)'
+
+def stmtCreateExecutionsTable():
+    return 'CREATE TABLE executions (id INT AUTO_INCREMENT PRIMARY KEY, userId INT, start DATETIME, end DATETIME)'
+
+def stmtInsertExecution():
+    return f'INSERT INTO executions (start, end, userId) VALUES ("{utils.getDateTime()}",NULL,NULL);'
+
+def stmtUpdateExecution():
+    return f'UPDATE executions SET end = "{utils.getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
