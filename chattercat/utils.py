@@ -42,10 +42,13 @@ class Response:
 
     def parseUsername(self):
         try:
-            return self.response.split('!')[0].split(':')[1]
+            if('!' in self.response):
+                username = self.response.split('!')[0]
+                if(':' in username):
+                    return username.split(':')[1]
         except Exception as e:
             printError(self.channelName, f'parseUsername() error: {e}')
-            return None
+        return None
 
     def parseMessage(self):
             return self.response.split(f'#{self.channelName} :')[1] if len(self.response.split(f'#{self.channelName} :')) > 1 else None
@@ -55,7 +58,10 @@ def cls():
 
 def downloadFile(url, fileName):
     if(not os.path.exists(fileName)):
-        r = requests.get(url)
+        try:
+            r = requests.get(url)
+        except:
+            return None
         with open(fileName, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024): 
                 if chunk:
@@ -123,9 +129,8 @@ def verify():
     except InvalidConfigValue:
         printError(None, ERROR_MESSAGES['config'])
         sys.exit()
-    if(db.verifyAdminDb() is False):
-        db.createAdminDb()
-    db.addExecution()
+    if(db.verifyHKDb() is False):
+        db.createHKDb()
     return streams
 
 def printBanner():

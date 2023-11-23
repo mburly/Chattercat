@@ -43,8 +43,6 @@ class Chattercat:
             return None
 
     def run(self):
-        if(self.db is None):
-            utils.printInfo(self.channelName, f'DB is currently none [1]: {self.db}')
         self.db.getChannelActiveEmotes()
         self.startSocket()
         self.liveClock = time.time()

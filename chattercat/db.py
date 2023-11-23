@@ -2,15 +2,10 @@ import os
 
 import mysql.connector
 
-import chattercat.constants as constants
+from chattercat.constants import DIRS, EMOTE_TYPES, STATUS_MESSAGES
 import chattercat.twitch as twitch
 from chattercat.utils import Config
 import chattercat.utils as utils
-
-ERROR_MESSAGES = constants.ERROR_MESSAGES
-STATUS_MESSAGES = constants.STATUS_MESSAGES
-DIRS = constants.DIRS
-EMOTE_TYPES = constants.EMOTE_TYPES
 
 class Database:
     def __init__(self, channelName):
@@ -23,15 +18,18 @@ class Database:
             self.connect()
 
     def commit(self, sql):
-        if(not self.db.is_connected()):
-            self.connect()
-        if(isinstance(sql, list)):
-            for stmt in sql:
-                self.cursor.execute(stmt)
-            self.db.commit()
-        else:
-            self.cursor.execute(sql)
-            self.db.commit()
+        try:
+            if(not self.db.is_connected()):
+                self.connect()
+            if(isinstance(sql, list)):
+                for stmt in sql:
+                    self.cursor.execute(stmt)
+                self.db.commit()
+            else:
+                self.cursor.execute(sql)
+                self.db.commit()
+        except:
+            return None
 
     def connect(self, dbName=None):
         try:
@@ -44,6 +42,7 @@ class Database:
             self.cursor = self.db.cursor()
         except:
             self.db = None
+            return None
 
     def disconnect(self):
         if(self.cursor is not None):
@@ -53,6 +52,8 @@ class Database:
             
     def createChannelDb(self):
         db = connect()
+        if(db is None):
+            return None
         cursor = db.cursor()
         cursor.execute(self.stmtCreateDatabase())
         cursor.close()
@@ -67,11 +68,7 @@ class Database:
         except Exception as e:
             utils.printInfo(self.channelName, e)
             pass
-        # BELOW TRY-EXCEPT IS A TEST. DELETE AFTER
-        try:
-            self.populateEmotesTable()
-        except Exception as e:
-            utils.printInfo(self.channelName, f'populateEmotesTable() Exception: {e}')
+        self.populateEmotesTable()
         self.downloadEmotes()
 
     def startSession(self, stream):
@@ -139,36 +136,36 @@ class Database:
     def update(self):
         utils.printInfo(self.channelName, STATUS_MESSAGES['updates'])
         newEmoteCount = 0
-        try:
-            self.channel = twitch.getChannelInfo(self.channelName)
-            self.channelId = twitch.getChannelId(self.channelName)
-            channelEmotes = twitch.getAllChannelEmotes(self.channelName)
-            currentEmotes = self.getEmotes(channelEmotes=channelEmotes)
-            previousEmotes = self.getEmotes(active=1)
-            inactiveEmotes = self.getEmotes(active=0)
-            A = set(currentEmotes)
-            B = set(previousEmotes)
-            C = set(inactiveEmotes)
-            newEmotes = A-B
-            removedEmotes = B-A
-            reactivatedEmotes = A.intersection(C)
-            for emote in newEmotes:
-                if(emote in reactivatedEmotes):
-                    continue
-                self.logEmote(emote, self.channelId)
-                newEmoteCount += 1
-            self.setEmotesStatus(removedEmotes, 0)
-            self.setEmotesStatus(reactivatedEmotes, 1)
-            if(newEmoteCount > 0):
-                self.downloadEmotes()
-                utils.printInfo(self.channelName, utils.downloadMessage(newEmoteCount))
-            self.updateChannelPicture()
-        except Exception as e:
-            utils.printInfo(self.channelName, f'Inside update() Exception: {e}')
+        self.channel = twitch.getChannelInfo(self.channelName)
+        self.channelId = twitch.getChannelId(self.channelName)
+        channelEmotes = twitch.getAllChannelEmotes(self.channelName)
+        currentEmotes = self.getEmotes(channelEmotes=channelEmotes)
+        previousEmotes = self.getEmotes(active=1)
+        inactiveEmotes = self.getEmotes(active=0)
+        A = set(currentEmotes)
+        B = set(previousEmotes)
+        C = set(inactiveEmotes)
+        newEmotes = A-B
+        removedEmotes = B-A
+        reactivatedEmotes = A.intersection(C)
+        for emote in newEmotes:
+            if(emote in reactivatedEmotes):
+                continue
+            self.logEmote(emote, self.channelId)
+            newEmoteCount += 1
+        self.setEmotesStatus(removedEmotes, 0)
+        self.setEmotesStatus(reactivatedEmotes, 1)
+        if(newEmoteCount > 0):
+            self.downloadEmotes()
+            utils.printInfo(self.channelName, utils.downloadMessage(newEmoteCount))
+        self.updateChannelPicture()
         utils.printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
 
-    def downloadEmotesHelper(self):
+    def downloadEmotes(self):
         utils.printInfo(self.channelName, STATUS_MESSAGES['downloading'])
+        for dir in DIRS.values():
+            if(not os.path.exists(dir)):
+                os.mkdir(dir)
         self.cursor.execute(self.stmtSelectEmotesToDownload())
         for row in self.cursor.fetchall():
             url = row[0]
@@ -192,12 +189,6 @@ class Database:
                 path = f'{DIRS["7tv"]}/{emoteName}-{emoteId}.webp'
             self.commit(self.stmtUpdateEmotePath(path, emoteId, source))
             utils.downloadFile(url, path)
-
-    def downloadEmotes(self):
-        for dir in DIRS.values():
-            if(not os.path.exists(dir)):
-                os.mkdir(dir)
-        self.downloadEmotesHelper()
 
     def getChannelActiveEmotes(self):
         self.channelEmotes = []
@@ -257,20 +248,33 @@ class Database:
 
     def updateChannelPicture(self):
         db = connect("cc_housekeeping")
+        if(db is None):
+            return None
         cursor = db.cursor(buffered=True)
-        cursor.execute(self.stmtSelectProfilePictureUrl())
+        if(cursor is None):
+            return None
+        try:
+            cursor.execute(self.stmtSelectProfilePictureUrl())
+        except:
+            return None
         if(cursor.rowcount == 0):
-            cursor.execute(self.stmtInsertNewPicture())
-            db.commit()
+            try:
+                cursor.execute(self.stmtInsertNewPicture())
+                db.commit()
+            except:
+                return None
             utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
         else:
-            for url in cursor.fetchall():
-                profileImageUrl = url[0]
-                if(self.channel['profile_image_url'] != profileImageUrl):
-                    cursor.execute(self.stmtInsertNewPicture())
-                    db.commit()
-                    os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
-                    utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            try:
+                for url in cursor.fetchall():
+                    profileImageUrl = url[0]
+                    if(self.channel['profile_image_url'] != profileImageUrl):
+                        cursor.execute(self.stmtInsertNewPicture())
+                        db.commit()
+                        os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
+                        utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            except:
+                return None
         cursor.close()
         db.close()
         
@@ -398,14 +402,6 @@ class Database:
     def stmtUpdateSegmentLength(self):
         return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
 
-def addExecution():
-    db = connect("cc_housekeeping")
-    cursor = db.cursor()
-    cursor.execute(stmtInsertExecution())
-    db.commit()
-    cursor.close()
-    db.close()
-    
 def connect(dbName=None):
         try:
             c = Config()
@@ -419,19 +415,28 @@ def connect(dbName=None):
         except:
             return None    
 
-def createAdminDb():
+def createHKDb():
     db = connect()
+    if(db is None):
+        return None
     cursor = db.cursor()
-    cursor.execute(stmtCreateAdminDatabase())
-    cursor.execute('USE cc_housekeeping;')
-    stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable(),
-             stmtCreateExecutionLogTable(),stmtCreateExecutionsTable()]
-    for sql in stmts:
-        cursor.execute(sql)
+    if(cursor is None):
+        return None
+    try:
+        cursor.execute(stmtCreateHKDatabase())
+        cursor.execute('USE cc_housekeeping;')
+    except:
+        return None
+    stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable()]
+    try:
+        for sql in stmts:
+            cursor.execute(sql)
+    except:
+        return None
     cursor.close()
     db.close()
 
-def verifyAdminDb():
+def verifyHKDb():
     db = connect("cc_housekeeping")
     if db is None:
         return False
@@ -439,7 +444,7 @@ def verifyAdminDb():
         db.close()
         return True
     
-def stmtCreateAdminDatabase():
+def stmtCreateHKDatabase():
     return 'CREATE DATABASE IF NOT EXISTS cc_housekeeping COLLATE utf8mb4_general_ci;'
 
 def stmtCreatePicturesTable():
@@ -450,15 +455,3 @@ def stmtCreateAdminsTable():
 
 def stmtCreateAdminSessionsTable():
     return 'CREATE TABLE adminsessions (id INT AUTO_INCREMENT PRIMARY KEY, token VARCHAR(256), userId INT, datetime DATETIME, expires DATETIME)'
-
-def stmtCreateExecutionLogTable():
-    return 'CREATE TABLE executionlog (id INT AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(256), message VARCHAR(256), type INT, datetime DATETIME)'
-
-def stmtCreateExecutionsTable():
-    return 'CREATE TABLE executions (id INT AUTO_INCREMENT PRIMARY KEY, userId INT, start DATETIME, end DATETIME)'
-
-def stmtInsertExecution():
-    return f'INSERT INTO executions (start, end, userId) VALUES ("{utils.getDateTime()}",NULL,NULL);'
-
-def stmtUpdateExecution():
-    return f'UPDATE executions SET end = "{utils.getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
