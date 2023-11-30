@@ -46,8 +46,8 @@ class Response:
                 username = self.response.split('!')[0]
                 if(':' in username):
                     return username.split(':')[1]
-        except Exception as e:
-            printError(self.channelName, f'parseUsername() error: {e}')
+        except:
+            return None
         return None
 
     def parseMessage(self):
@@ -141,11 +141,24 @@ def printBanner():
 def printError(channelName, message):
     print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channelName if(channelName is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_red"]}ERROR{COLORS["clear"]}] {message}')
 
+def printException(channelName, message):
+    print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channelName if(channelName is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_yellow"]}EXCEPTION{COLORS["clear"]}] {message}')
+
 def printInfo(channelName, message):
     print(f'[{COLORS["bold_blue"]}{getDateTime(True)}{COLORS["clear"]}] [{COLORS["bold_purple"]}{channelName if(channelName is not None) else "Chattercat"}{COLORS["clear"]}] [{COLORS["hi_green"]}INFO{COLORS["clear"]}] {message}')
 
 def statusMessage(channelName, online=True):
     return f'{channelName} just went live!' if online else f'{channelName} is now offline.'
 
-def downloadMessage(newEmoteCount):
-    return f'Downloaded {newEmoteCount} newly active emotes.'
+
+def ping(channelName):
+    with open('pings.txt', 'a', encoding='UTF-8') as file:
+                    file.write(f'{getDateTime()} {channelName} PING.\n')
+
+def startPing(channelName):
+    with open('pings.txt', 'a', encoding='UTF-8') as file:
+                    file.write(f'{getDateTime()} {channelName} PING. [started]\n')
+
+def endPing(channelName):
+    with open('pings.txt', 'a', encoding='UTF-8') as file:
+                    file.write(f'{getDateTime()} {channelName} PING. [ended]\n')

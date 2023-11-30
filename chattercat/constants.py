@@ -36,7 +36,8 @@ COLORS = { 'clear':'\033[0m',
            'bold_blue':'\033[1;34m',
            'bold_purple':'\033[1;35m',
            'hi_green':'\033[0;92m',
-           'hi_red':'\033[0;91m' }
+           'hi_red':'\033[0;91m',
+           'hi_yellow':'\033[93m' }
 BANNER = f'{COLORS["bold_purple"]}{pyfiglet.figlet_format("Chattercat", font="speed")}{COLORS["clear"]}'
 VERSION = '1.1'
 EMOTE_TYPES = ['twitch','subscriber','ffz','ffz_channel','bttv','bttv_channel','7tv','7tv_channel']

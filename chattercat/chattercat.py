@@ -15,30 +15,18 @@ class Chattercat:
         self.stream = twitch.getStreamInfo(self.channelName)
         try:
             while(self.executing):
-                with open('pings.txt', 'a', encoding='UTF-8') as file:
-                    file.write(f'{utils.getDateTime()} {self.channelName} PING.\n')
-                try:
-                    if(self.stream is not None):
-                        with open('pings.txt', 'a', encoding='UTF-8') as file:
-                            file.write(f'{utils.getDateTime()} {self.channelName} PING [started].\n')
-                        try:
-                            self.start()
-                        except Exception as e:
-                            utils.printInfo(self.channelName, f'Start() exception: {e}')
-                        while(self.running):
-                            try:
-                                self.run()
-                            except Exception as e:
-                                utils.printInfo(self.channelName, f'run() Exception: {e}')
-                        self.end()
-                        with open('pings.txt', 'a', encoding='UTF-8') as file:
-                            file.write(f'{utils.getDateTime()} {self.channelName} PING [ended].\n')
-                    else:
-                        self.stream = twitch.getStreamInfo(self.channelName)
-                        if(self.stream is None):
-                            time.sleep(TIMERS['sleep'])
-                except Exception as e:
-                    utils.printInfo(self.channelName, f'executing() Exception: {e}')
+                utils.ping(self.channelName)
+                if(self.stream is not None):
+                    utils.startPing(self.channelName)
+                    self.start()
+                    while(self.running):
+                        self.run()
+                    self.end()
+                    utils.endPing(self.channelName)
+                else:
+                    self.stream = twitch.getStreamInfo(self.channelName)
+                    if(self.stream is None):
+                        time.sleep(TIMERS['sleep'])
         except KeyboardInterrupt:
             return None
 
@@ -93,7 +81,7 @@ class Chattercat:
                         except Exception as e:
                             utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
                 except Exception as e:
-                    utils.printInfo(self.channelName, f'WITHIN run() Exception: {e}\n')
+                    utils.printInfo(self.channelName, f'WITHIN run() Exception: {e}, {type(e)}\n')
         except Exception as e:
             utils.printInfo(self.channelName, f'Exception [11]: {e}\n')
             self.endExecution()
@@ -101,7 +89,10 @@ class Chattercat:
     
     def start(self):
         utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
-        self.db = Database(self.channelName)
+        try:
+            self.db = Database(self.channelName)
+        except:
+            return None
         if(self.db.startSession(self.stream) is None):
             return None
         self.running = True
@@ -127,9 +118,8 @@ class Chattercat:
             self.sock.send(f'PASS {self.db.config.token}\n'.encode('utf-8'))
             self.sock.send(f'NICK {self.db.config.nickname}\n'.encode('utf-8'))
             self.sock.send(f'JOIN #{self.channelName}\n'.encode('utf-8'))
-        except Exception as e:
+        except:
             utils.printError(self.channelName, ERROR_MESSAGES['host'])
-            utils.printError(self.channelName, f'Extended eror info: {e}')
             self.db.endSession()
             return None
 

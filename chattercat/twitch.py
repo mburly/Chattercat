@@ -34,6 +34,8 @@ def get7TVEmotes(channelId=None):
             resp = requests.get(url,params=None,headers=None).json()
         except:
             return None
+        if(resp is None):
+            return None
         if('emotes' in resp.keys()):
             emotes = resp['emotes']
             for emote in emotes:
@@ -44,7 +46,11 @@ def get7TVEmotes(channelId=None):
             resp = requests.get(url,params=None,headers=None).json()
         except:
             return None
+        if(resp is None):
+            return None
         if('emote_set' in resp.keys()):
+            if(resp['emote_set'] is None):
+                return None
             if('emotes' in resp['emote_set'].keys()):
                 for emote in resp['emote_set']['emotes']:
                     emoteSet.append(Emote(emote['id'], emote['name'], CDN_URLS['7tv'].replace('#', emote['id'])))
@@ -56,6 +62,8 @@ def getBTTVEmoteById(channelId, emoteId) -> Emote:
         resp = requests.get(url,params=None,headers=None).json()
     except:
         return None
+    if(resp is None):
+        return None
     if('sharedEmotes' in resp.keys()):
         emotes = resp['sharedEmotes']
         for emote in emotes:
@@ -64,6 +72,8 @@ def getBTTVEmoteById(channelId, emoteId) -> Emote:
     try:
         resp = requests.get(url,params=None,headers=None).json()
     except:
+        return None
+    if(resp is None):
         return None
     if('channelEmotes' in resp.keys()):
         emotes = resp['channelEmotes']
@@ -96,6 +106,8 @@ def getBTTVEmotes(channelId=None):
             resp = requests.get(url,params=None,headers=None).json()
         except:
             return None
+        if(resp is None):
+            return None
         if('channelEmotes' in resp.keys()):
             channelEmotes = resp['channelEmotes']
             if(len(channelEmotes) != 0):
@@ -110,6 +122,8 @@ def getBTTVEmotes(channelId=None):
 
 def getChannelId(channelName):
     channelInfo = getChannelInfo(channelName)
+    if(channelInfo is None):
+        return None
     if('id' in channelInfo.keys()):
         return int(channelInfo['id'])
     return None
@@ -119,6 +133,8 @@ def getChannelInfo(channelName):
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except:
+        return None
+    if(resp is None):
         return None
     if('data' in resp.keys()):
         if(resp['data'] == []):
@@ -140,6 +156,8 @@ def getFFZEmoteById(emoteId) -> Emote:
         emote = requests.get(url,params=None,headers=None).json()
     except:
         return None
+    if(emote is None):
+        return None
     if('emote' in emote.keys()):
         if('urls' in emote['emote'].keys()):
             if(len(emote['emote']['urls']) == 1):
@@ -155,6 +173,8 @@ def getFFZEmotes(channelId=None):
             emotes = requests.get(url,params=None,headers=None).json()
         except:
             return None
+        if(emotes is None):
+            return None
         if('sets' in emotes.keys()):
             if('3' in emotes['sets'].keys()):
                 if('emoticons' in emotes['sets']['3'].keys()):
@@ -164,6 +184,8 @@ def getFFZEmotes(channelId=None):
         try:
             emotes = requests.get(url,params=None,headers=None).json()
         except:
+            return None
+        if(emotes is None):
             return None
         if('room' in emotes.keys()):
             if('set' in emotes['room'].keys()):
@@ -195,10 +217,18 @@ def getOAuth(clientId, clientSecret):
         response = requests.post(
             constants.OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
         )
+        if(response is None):
+            return None
         resp = response.json()
     except:
         return None
-    if('access_token' in resp.keys()):
+    if(resp is None):
+        return None
+    try:
+        respKeys = resp.keys()
+    except:
+        return None
+    if('access_token' in respKeys):
         return resp['access_token']
     return None
     
@@ -206,11 +236,18 @@ def getStreamInfo(channelName):
     url = f'{API_URLS["twitch"]}/streams?user_login={channelName}'
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
+    except requests.ConnectionError:
+        utils.printException(channelName, 'Experienced a Connection Error.')
+        return None
     except:
         return None
-    respKeys = resp.keys()
+    if(resp is None):
+        return None
+    try:
+        respKeys = resp.keys()
+    except:
+        return None
     if('error' in respKeys):
-        utils.printError(channelName, resp['error'])
         return None
     if('data' in respKeys):
         if(len(resp['data']) == 0):
@@ -224,6 +261,8 @@ def getTwitchEmoteById(channelId, emoteId, source) -> Emote:
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except:
+        return None
+    if(resp is None):
         return None
     if('data' in resp.keys()):
         for emote in resp['data']:
@@ -241,6 +280,8 @@ def getTwitchEmotes(channelName=None):
     except:
         return None
     try:
+        if(resp is None):
+            return None
         if('data' in resp.keys()):
             emotes = resp['data']
             if(emotes == []):
@@ -256,6 +297,8 @@ def getTwitchEmotes(channelName=None):
                 emote = Emote(emotes[i]['id'], emotes[i]['name'], url)
                 emoteSet.append(emote)
             return emoteSet
-    except Exception as e:
-        utils.printError(channelName, f'getTwitchEmotes(): {e}')
+    except:
+        if(emoteSet == []):
+            return None
+        return emoteSet
     return emoteSet
