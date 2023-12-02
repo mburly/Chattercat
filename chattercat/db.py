@@ -99,9 +99,8 @@ class Database:
         try:
             self.logMessage(self.getChatterId(resp.username), resp.message)
             self.logMessageEmotes(resp.message)
-        except Exception as e:
-            with open('log.txt', 'a', encoding='UTF-8') as file:
-                file.write(f'{getDateTime()} {self.channelName} Exception logging response {resp}: {e}.\n')
+        except:
+            return None
 
     def logChatter(self, username):
         self.commit(self.stmtInsertNewChatter(username))

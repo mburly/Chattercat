@@ -26,6 +26,19 @@ def getAllChannelEmotes(channelName):
     channelEmotes[EMOTE_TYPES[7]] = get7TVEmotes(channelId)
     return channelEmotes
 
+def get7TVEmoteById(emoteId) -> Emote:
+    url = f'{API_URLS["7tv"]}/emotes/{emoteId}'
+    try:
+        resp = requests.get(url,params=None,headers=None).json()
+    except:
+        return None
+    if(resp is None):
+        return None
+    respKeys = resp.keys()
+    if 'name' in respKeys:
+        return Emote(emoteId, resp['name'], f"{CDN_URLS['7tv'].replace('#', emoteId)}")
+    return None
+
 def get7TVEmotes(channelId=None):
     emoteSet = []
     if(channelId is None):
@@ -147,8 +160,11 @@ def getEmoteById(channelId, emoteId, source) -> Emote:
         return getTwitchEmoteById(channelId, emoteId, source)
     elif(source == 3 or source == 4):
         return getFFZEmoteById(emoteId)
-    else:
+    elif(source == 5 or source == 6):
         return getBTTVEmoteById(channelId, emoteId)
+    elif(source == 7 or source == 8):
+        return get7TVEmoteById(emoteId)
+    return None
 
 def getFFZEmoteById(emoteId) -> Emote:
     url = f'{API_URLS["ffz"]}/emote/{emoteId}'
