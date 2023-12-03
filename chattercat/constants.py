@@ -1,5 +1,6 @@
 import pyfiglet
 
+
 CONFIG_NAME = 'conf.ini'
 STREAMS = 'streams.txt'
 SERVER = 'irc.chat.twitch.tv'
@@ -53,11 +54,8 @@ ERROR_MESSAGES = { 'host':'Unable to connect to host. Likely lost internet conne
                    'connection':'No internet connection found. Please try again.',
                    'no_streams':'No streams provided. Please add at least one channel to streams.txt' }
 STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
-                    'updates':'Checking for updates...',
-                    'updates_complete':'Update complete.',
-                    'set_emote':'Setting emote:',
-                    'inactive':'now inactive.',
-                    'reactivated':'now reactivated.' }
+                    'updates':'Checking for emote updates...',
+                    'updates_complete':'Emote update check complete.' }
 TIMERS = { 'sleep':15,
            'live':1,
            'socket':5 }

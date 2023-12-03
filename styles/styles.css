@@ -571,7 +571,6 @@ hr {
     border-radius: 6px;
     padding: 5px 5px;
     
-    /* Position the tooltip */
     position: absolute;
     z-index: 1;
     top: 100%;
@@ -588,7 +587,6 @@ hr {
     border-radius: 6px;
     padding: 5px 5px;
     
-    /* Position the tooltip */
     position: absolute;
     z-index: 1;
     bottom: 100%;
@@ -904,9 +902,9 @@ hr {
 }
 
 .log-type {
-    /* width:fit-content; */
     width:75px;
     padding:3px;
+    text-align:center;
 }
 
 .text-enabled {
@@ -942,16 +940,13 @@ hr {
 }
 
 #updatesPanel {
+    background:#dfdfdf;
     width:fit-content;
-    overflow:scroll;
-    max-height:200px;
-    height:200px;
     margin-top:25px;
 }
 
 .no-updates-text {
     text-align:center;
-    margin-top:30%;
     opacity:50%;
 }
 
@@ -1356,6 +1351,7 @@ tr:nth-child(even) {
 
 .info-help-hide {
     font-size:8px;
+    margin-right:5px;
 }
 
 .info-help-hide:hover {

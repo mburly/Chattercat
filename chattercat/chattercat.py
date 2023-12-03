@@ -7,6 +7,7 @@ import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
 
+
 class Chattercat:
     executing = True
     running = True

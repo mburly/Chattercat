@@ -1,11 +1,8 @@
 import requests
 
-import chattercat.constants as constants
+from chattercat.constants import API_URLS, CDN_URLS, EMOTE_TYPES, OAUTH_URL
 import chattercat.utils as utils
 
-API_URLS = constants.API_URLS
-CDN_URLS = constants.CDN_URLS
-EMOTE_TYPES = constants.EMOTE_TYPES
 
 class Emote:
     def __init__(self, id, code, url):
@@ -142,7 +139,7 @@ def getChannelId(channelName):
     return None
 
 def getChannelInfo(channelName):
-    url = f'https://api.twitch.tv/helix/users?login={channelName}'
+    url = f'{API_URLS["twitch"]}/users?login={channelName}'
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except:
@@ -231,7 +228,7 @@ def getHeaders():
 def getOAuth(clientId, clientSecret):
     try:
         response = requests.post(
-            constants.OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
+            OAUTH_URL + f'/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials'
         )
         if(response is None):
             return None

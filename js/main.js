@@ -244,7 +244,7 @@ function loadChannelPage(id)
                         }
                         var date = log_data[id]["datetime"].split(' ')[0].split('-');
                         date = date[1].replace('0','') + '/' + date[2].replace('0','') + '/' + date[0];
-                        if(i == 0) {
+                        if(i == 0 || i == 1) {
                             if(log_data[id]["type"] == "disabled") {
                                 $('.emote-log').append('<li class="log-item"><span class="badge log-date">' + date +'</span><img class="channel-icon log-icon" src="pictures/' + channel + '.png"><span class="channel-name log-channel-name">' + channel + '</span><span class="log-type text-disabled">disabled</span><div class="tooltip-bottom"><img class="emote log-emote" src="' + log_data[id]["path"] +'"><span class="tooltiptext"><img class="emote-tooltip" id="' + log_data[id]["path"] + '-tooltip" src="' + log_data[id]["path"] + '"></span></div><span class="emote-name log-emote-name">' + log_data[id]["emote"] +'</span></li>');
                             }

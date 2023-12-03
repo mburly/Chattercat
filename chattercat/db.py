@@ -4,7 +4,8 @@ import mysql.connector
 
 from chattercat.constants import DIRS, EMOTE_TYPES, STATUS_MESSAGES
 import chattercat.twitch as twitch
-from chattercat.utils import Config, Response, downloadFile, getDate, getDateTime, getNumPhotos, parseMessageEmotes, printInfo, removeSymbolsFromName
+from chattercat.utils import Config, Response
+import chattercat.utils as utils
 
 
 class Database:
@@ -125,7 +126,7 @@ class Database:
         self.commit([self.stmtInsertNewMessage(message, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
         
     def logMessageEmotes(self, message):
-        messageEmotes = parseMessageEmotes(self.channelEmotes, message)
+        messageEmotes = utils.parseMessageEmotes(self.channelEmotes, message)
         for emote in messageEmotes:
             if('\\' in emote):
                 emote = emote.replace('\\','\\\\')
@@ -145,7 +146,7 @@ class Database:
             source += 1
 
     def update(self):
-        printInfo(self.channelName, STATUS_MESSAGES['updates'])
+        utils.printInfo(self.channelName, STATUS_MESSAGES['updates'])
         newEmoteCount = 0
         self.channel = twitch.getChannelInfo(self.channelName)
         self.channelId = twitch.getChannelId(self.channelName)
@@ -168,12 +169,12 @@ class Database:
         self.setEmotesStatus(reactivatedEmotes, 1)
         if(newEmoteCount > 0):
             self.downloadEmotes()
-            printInfo(self.channelName, f'Downloaded {newEmoteCount} new emotes.')
+            utils.printInfo(self.channelName, f'Added {newEmoteCount} new emotes.')
         self.updateChannelPicture()
-        printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
+        utils.printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
 
     def downloadEmotes(self):
-        printInfo(self.channelName, STATUS_MESSAGES['downloading'])
+        utils.printInfo(self.channelName, STATUS_MESSAGES['downloading'])
         for dir in DIRS.values():
             if(not os.path.exists(dir)):
                 os.mkdir(dir)
@@ -184,7 +185,7 @@ class Database:
         for row in self.cursor.fetchall():
             url = row[0]
             emoteId = row[1]
-            emoteName = removeSymbolsFromName(row[2])
+            emoteName = utils.removeSymbolsFromName(row[2])
             source = int(row[3])
             if(source == 1 or source == 2):
                 if('animated' in url):
@@ -202,7 +203,7 @@ class Database:
             elif(source == 7 or source == 8):
                 path = f'{DIRS["7tv"]}/{emoteName}-{emoteId}.webp'
             self.commit(self.stmtUpdateEmotePath(path, emoteId, source))
-            downloadFile(url, path)
+            utils.downloadFile(url, path)
 
     def getChannelActiveEmotes(self):
         self.channelEmotes = []
@@ -289,7 +290,7 @@ class Database:
                 db.commit()
             except:
                 return None
-            downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
         else:
             try:
                 for url in cursor.fetchall():
@@ -300,8 +301,8 @@ class Database:
                         except:
                             return None
                         db.commit()
-                        os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{getNumPhotos(self.channelName)+1}.png")
-                        downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+                        os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
+                        utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
             except:
                 return None
         cursor.close()
@@ -365,7 +366,7 @@ class Database:
         return f'SELECT MAX(id) FROM sessions'
 
     def stmtUpdateSessionEndDatetime(self):
-        return f'UPDATE sessions SET end_datetime = "{getDateTime()}" WHERE id = {self.sessionId}'
+        return f'UPDATE sessions SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.sessionId}'
 
     def stmtUpdateSessionLength(self):
         return f'UPDATE sessions SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.sessionId}'
@@ -383,28 +384,28 @@ class Database:
         return f'SELECT url FROM pictures WHERE channel = "{self.channelName}" ORDER BY id DESC LIMIT 1;'
 
     def stmtInsertNewChatter(self, username):
-        return f'INSERT INTO chatters (username, first_date, last_date) VALUES ("{username}", "{getDate()}", "{getDate()}");'
+        return f'INSERT INTO chatters (username, first_date, last_date) VALUES ("{username}", "{utils.getDate()}", "{utils.getDate()}");'
         
     def stmtInsertNewMessage(self, message, chatterId):
-        return f'INSERT INTO messages (message, session_id, segment_id, chatter_id, datetime) VALUES ("{message}", {self.sessionId}, {self.segmentId}, {chatterId}, "{getDateTime()}");'    
+        return f'INSERT INTO messages (message, session_id, segment_id, chatter_id, datetime) VALUES ("{message}", {self.sessionId}, {self.segmentId}, {chatterId}, "{utils.getDateTime()}");'    
 
     def stmtInsertNewPicture(self):
-        return f'INSERT INTO pictures (channel, url, date_added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{getDateTime()}")'
+        return f'INSERT INTO pictures (channel, url, date_added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{utils.getDateTime()}")'
     
     def stmtUpdateChatterLastDate(self, chatterId):
-        return f'UPDATE chatters SET last_date = "{getDate()}" WHERE id = {chatterId};'
+        return f'UPDATE chatters SET last_date = "{utils.getDate()}" WHERE id = {chatterId};'
 
     def stmtUpdateEmoteCount(self, emote):
         return f'UPDATE emotes SET count = count + 1 WHERE code = BINARY "{emote}" AND active = 1;'
 
     def stmtInsertNewEmote(self, emote, source):
-        return f'INSERT INTO emotes (code, emote_id, url, date_added, source, active) VALUES ("{emote.code}","{emote.id}","{emote.url}","{getDate()}","{source}",1);'
+        return f'INSERT INTO emotes (code, emote_id, url, date_added, source, active) VALUES ("{emote.code}","{emote.id}","{emote.url}","{utils.getDate()}","{source}",1);'
 
     def stmtUpdateEmoteStatus(self, active, emoteId):
         return f'UPDATE emotes SET active = {active} WHERE emote_id = "{emoteId}";'
 
     def stmtInsertNewSession(self):
-        return f'INSERT INTO sessions (start_datetime, end_datetime, length) VALUES ("{getDateTime()}", NULL, NULL);'
+        return f'INSERT INTO sessions (start_datetime, end_datetime, length) VALUES ("{utils.getDateTime()}", NULL, NULL);'
 
     def stmtSelectGameById(self):
         return f'SELECT id FROM games WHERE id = {self.gameId};'
@@ -420,13 +421,13 @@ class Database:
             self.streamTitle = self.streamTitle.replace('\\', '\\\\')
         if('"' in self.streamTitle):
             self.streamTitle = self.streamTitle.replace('"', '\\"')
-        return f'INSERT INTO segments (session_id, stream_title, segment, start_datetime, end_datetime, length, game_id) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{getDateTime()}", NULL, NULL, {self.gameId});'
+        return f'INSERT INTO segments (session_id, stream_title, segment, start_datetime, end_datetime, length, game_id) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{utils.getDateTime()}", NULL, NULL, {self.gameId});'
 
     def stmtSelectSegmentNumberBySessionId(self):
         return f'SELECT MAX(segment) FROM segments WHERE session_id = {self.sessionId};'
 
     def stmtUpdateSegmentEndDatetime(self):
-        return f'UPDATE segments SET end_datetime = "{getDateTime()}" WHERE id = {self.segmentId};'
+        return f'UPDATE segments SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.segmentId};'
 
     def stmtUpdateSegmentLength(self):
         return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
@@ -512,7 +513,7 @@ def stmtCreateExecutionsTable():
     return 'CREATE TABLE executions (id INT AUTO_INCREMENT PRIMARY KEY, userId INT, start DATETIME, end DATETIME)'
 
 def stmtInsertExecution():
-    return f'INSERT INTO executions (start, end, userId) VALUES ("{getDateTime()}",NULL,NULL);'
+    return f'INSERT INTO executions (start, end, userId) VALUES ("{utils.getDateTime()}",NULL,NULL);'
 
 def stmtUpdateExecution():
-    return f'UPDATE executions SET end = "{getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
+    return f'UPDATE executions SET end = "{utils.getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
