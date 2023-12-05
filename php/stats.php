@@ -78,20 +78,42 @@
         $result = $conn->query($sql);
         $numMessages = $result->fetch_assoc()["num_messages"];
 
+        $allEmotes = array();
+        $allPaths = array();
+        $sql = "SELECT code, path FROM emotes WHERE active = 1;";
+        $result = $conn->query($sql);
+        while($emote = $result->fetch_assoc()) {
+            array_push($allEmotes, $emote["code"]);
+            array_push($allPaths, $emote["path"]);
+        }
+
         $sql = "SELECT username, message, datetime FROM recent_messages;";
         $result = $conn->query($sql);
         $recentMessageNames = '';
         $recentMessageMessages = '';
         $recentMessageDatetimes = '';
+        $seenWords = array();
         while($recent_chat = $result -> fetch_assoc()) {
+            $message = $recent_chat["message"];
+            $words = explode(" ", $message);
+            foreach($words as $word) {
+                $index = array_search($word, $allEmotes);
+                if($index != false) {
+                    if(!in_array($word, $seenWords)) {
+                        $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '">', $message);
+                        array_push($seenWords, $word);
+                    }
+                }
+            }
             $recentMessageNames .=  '"' . $recent_chat["username"] . '", ';
-            $recentMessageMessages .=  '"' . addcslashes(removeUnicode($recent_chat["message"]), '"\\/') . '", ';
+            $recentMessageMessages .=  '"' . addcslashes(removeUnicode($message), '"\\/') . '", ';
             $recentMessageDatetimes .=  '"' . $recent_chat["datetime"] . '", ';
+            $seenWords = array();
         }
         $recentMessageNames = substr($recentMessageNames, 0, -2);
         $recentMessageMessages = substr($recentMessageMessages, 0, -2);
         $recentMessageDatetimes = substr($recentMessageDatetimes, 0, -2);
-
+        
         $sql = "SELECT start_datetime, length FROM sessions ORDER BY id DESC LIMIT 5;";
         $result = $conn->query($sql);
         $recentSessionStartDatetimes = '';

@@ -1351,7 +1351,7 @@ tr:nth-child(even) {
 
 .info-help-hide {
     font-size:8px;
-    margin-right:5px;
+    margin-right:5px; 
 }
 
 .info-help-hide:hover {
@@ -1377,4 +1377,9 @@ tr:nth-child(even) {
 
 #infoPageButton:hover {
     cursor:pointer;
+}
+
+.message-emote {
+    height:32px;
+    width:32px;
 }
