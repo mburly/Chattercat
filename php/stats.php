@@ -100,7 +100,7 @@
                 $index = array_search($word, $allEmotes);
                 if($index != false) {
                     if(!in_array($word, $seenWords)) {
-                        $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '">', $message);
+                        $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '" title="' . $allEmotes[$index] . '">', $message);
                         array_push($seenWords, $word);
                     }
                 }

@@ -181,7 +181,6 @@ function listeners() {
         $.post("php/emotes.php", {channel: channel})
         .done(function(data) {
             data = JSON.parse(data);
-            console.log(data);
             if(state == 'main') {
                 hide(state);
             }
