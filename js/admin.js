@@ -13,7 +13,6 @@ window.onload = function() {
     startTime();
     loadStatus();
     loadAdmins();
-    loadConsole();
 	loadMainData();
     loadTools();
     init();
@@ -60,28 +59,6 @@ class Counter {
 		}
 		timerStep();
 	}
-}
-
-function loadConsole() {
-    $.get("php/admin.php", function(data, status) {
-        var data = JSON.parse(data);
-        if(data["error"] != "") {
-            window.location.replace("index.html");
-        }
-        for(let i = 0; i < data["numConsoleMessages"]; i++) {
-            var name = "console " + i;
-            var type = "[INFO]";
-            if(data[name]["consoleType"] == 1) {
-                type = "[INFO]";
-            }
-            else {
-                type = "[ERROR]";
-            }
-            $('#console').append('<li><span class="console-datetime">' + data[name]["consoleDatetime"] + '</span> <span class="console-channel-name">' + data[name]["consoleChannel"] + '</span> <span class="console-message-type-info">' + type + '</span> <span class="console-message">' + data[name]["consoleMessage"] + '</span></li>');
-        }
-        remove("consoleLoad");
-    });
-
 }
 
 function init() {
@@ -217,16 +194,20 @@ function listeners() {
                     else if(data["sources"][i] == 5 || data["sources"][i] == 6) {
                         source = "BTTV";
                     }
+                    else if(data["sources"][i] == 7 || data["sources"][i] == 8) {
+                        source = "7TV";
+                    }
                     if(!data["active"][i]) {
                         active = "Disabled";
                     }
+                    var emoteSource = source == "7TV" ? "_7TV" : source;
                     const imageCol = '<td class="manage-emotes-col manage-emotes-emote-image-col manage-emotes-emote-image"><div class="tooltip-top"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"][i] + '-tooltip" src="' + data["paths"][i] + '"></span><img class="channel-emote" src="' + data["paths"][i] + '"></div></td>';
                     const nameCol = '<td class="manage-emotes-col manage-emotes-emote-name-col manage-emotes-emote-name emote-name">' + data["codes"][i] + '</td>';
                     const countCol = '<td class="manage-emotes-col manage-emotes-emote-count-col manage-emotes-emote-count">' + data["counts"][i].toLocaleString('en-US') + '</td>';
                     const urlCol = '<td class="manage-emotes-col manage-emotes-emote-url-col manage-emotes-emote-url"><a href="' + data["urls"][i] +'" title="' + data["urls"][i] + '">' + data["urls"][i] + '</a></td>';
                     const pathCol = '<td class="manage-emotes-col manage-emotes-emote-path-col manage-emotes-emote-path" title="' + data["paths"][i] + '">' + data["paths"][i] + '</td>';
                     const dateCol = '<td class="manage-emotes-col manage-emotes-emote-date-col manage-emotes-emote-date-added">' + date_addded + '</td>';
-                    const sourceCol = '<td class="manage-emotes-col manage-emotes-emote-source-col manage-emotes-emote-source ' + source + '-emote">' + source + '</td>';
+                    const sourceCol = '<td class="manage-emotes-col manage-emotes-emote-source-col manage-emotes-emote-source ' + emoteSource + '-emote">' + source + '</td>';
                     const activeCol = '<td class="manage-emotes-col manage-emotes-emote-active-col manage-emotes-emote-active emote-' + active + '" id="' + data["sources"][i] + '-' + data["emote_ids"][i] + '-active">' + active + '</td>';
                     var toolsCol = ''; 
                     if(active == "Enabled") {

@@ -44,10 +44,6 @@
                 $executeStart = null;
                 $numChannelsOnline = 0;
                 $numMessages = 0;
-                $consoleDatetimes = array();
-                $consoleTypes = array();
-                $consoleChannels = array();
-                $consoleMessages = array();
                 $sql = 'SELECT * FROM executions ORDER BY id DESC LIMIT 1;';
                 $result = $conn->query($sql);
                 if($result->num_rows > 0) {
@@ -78,16 +74,7 @@
                             }
     
                         }
-                    }
-                    $sql = 'SELECT * FROM executionlog ORDER BY id DESC LIMIT 100;';
-                    $result = $conn->query($sql);
-                    while($row = $result->fetch_assoc()) {
-                        array_push($consoleDatetimes, $row["datetime"]);
-                        array_push($consoleTypes, $row["type"]);
-                        array_push($consoleChannels, $row["channel"]);
-                        array_push($consoleMessages, $row["message"]);
-                    }
-    
+                    }    
                 }
                 $cwd = getcwd();
                 $dir = explode("php", $cwd)[0] . "emotes";
@@ -114,7 +101,7 @@
                     }
                     $counter = $counter + 1;
                 }
-                returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $consoleDatetimes, $consoleChannels, $consoleMessages, $consoleTypes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline);
+                returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline);
             }
             else {
                 returnWithError("no admin credentials");
@@ -149,15 +136,11 @@
         sendResultInfoAsJson( $retValue );
     }
     
-    function returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $consoleDatetimes, $consoleChannels, $consoleMessages, $consoleTypes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline)
+    function returnInfo($username, $executing, $executeStart, $numChannels, $numMessages, $numEmotes, $numTwitchEmotes, $numBTTVEmotes, $numFFZEmotes, $numChannelsOnline)
     {
-        $numConsoleMessages = count($consoleDatetimes);
         $retVal = '{"username":"' . $username . '","executing":' . $executing . 
         ',"executeStart":"' . $executeStart . '","numChannels":' . $numChannels . 
-        ',"numMessages":' . $numMessages . ',"numEmotes":' . $numEmotes . ',"numConsoleMessages":' . $numConsoleMessages . ',"numTwitchEmotes":' . $numTwitchEmotes . ',"numBTTVEmotes":' . $numBTTVEmotes . ',"numFFZEmotes":' . $numFFZEmotes . ',"numChannelsOnline":' . $numChannelsOnline . ',';
-        for($i = 0, $size = $numConsoleMessages; $i < $size; ++$i) {
-            $retVal .= '"console ' . $i . '": { "consoleDatetime":"' . $consoleDatetimes[$i] . '","consoleChannel":"' . $consoleChannels[$i] . '","consoleMessage":"' . $consoleMessages[$i] . '","consoleType":"' . $consoleTypes[$i] . '"},';   
-        }
+        ',"numMessages":' . $numMessages . ',"numEmotes":' . $numEmotes . ',"numTwitchEmotes":' . $numTwitchEmotes . ',"numBTTVEmotes":' . $numBTTVEmotes . ',"numFFZEmotes":' . $numFFZEmotes . ',"numChannelsOnline":' . $numChannelsOnline . ',';
         $retVal .= '"error":""}';
         sendResultInfoAsJson($retVal);
     }
