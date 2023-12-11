@@ -5,13 +5,10 @@ import time
 
 import requests
 
-from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, STREAMS, TWITCH_VARIABLES
+from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
 import chattercat.db as db
 import chattercat.twitch as twitch
 
-
-class InvalidConfigValue(Exception):
-    pass
 
 class Config:
     def __init__(self):
@@ -97,7 +94,8 @@ def getNumPhotos(channelName):
 def getStreamNames():
     streams = []
     for stream in open(STREAMS, 'r'):
-        streams.append(stream.replace('\n',''))
+        if stream != '\n':
+            streams.append(stream.replace('\n',''))
     return streams
 
 def removeSymbolsFromName(emoteName):
@@ -124,13 +122,16 @@ def verify():
     if(len(streams) == 0):
         printError(None, ERROR_MESSAGES['no_streams'])
         sys.exit()
-    try:
-        twitch.getChannelId(streams[0])
-    except InvalidConfigValue:
-        printError(None, ERROR_MESSAGES['config'])
-        sys.exit()
-    if(db.verifyHKDb() is False):
-        db.createHKDb()
+    printInfo(None, STATUS_MESSAGES['validating'])
+    for stream in streams:
+        if(twitch.getChannelInfo(stream) is None):
+            printError(stream, ERROR_MESSAGES['channel'])
+            streams.remove(stream)
+        else:
+            printInfo(stream, 'Channel validated.') 
+    printInfo(None, STATUS_MESSAGES['validating_complete'])
+    if(db.verifyAdminDb() is False):
+        db.createAdminDb()
     db.addExecution()
     return streams
 

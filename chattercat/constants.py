@@ -55,7 +55,9 @@ ERROR_MESSAGES = { 'host':'Unable to connect to host. Likely lost internet conne
                    'no_streams':'No streams provided. Please add at least one channel to streams.txt' }
 STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
                     'updates':'Checking for emote updates...',
-                    'updates_complete':'Emote update check complete.' }
+                    'updates_complete':'Emote update check complete.',
+                    'validating':'Validating Twitch channels...',
+                    'validating_complete':'Channel validation complete.' }
 TIMERS = { 'sleep':15,
            'live':1,
            'socket':5 }

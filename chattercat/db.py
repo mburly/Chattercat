@@ -464,7 +464,7 @@ def connect(dbName=None):
         except:
             return None    
 
-def createHKDb():
+def createAdminDb():
     db = connect()
     if(db is None):
         return None
@@ -472,7 +472,7 @@ def createHKDb():
     if(cursor is None):
         return None
     try:
-        cursor.execute(stmtCreateHKDatabase())
+        cursor.execute(stmtCreateAdminDatabase())
         cursor.execute('USE cc_housekeeping;')
     except:
         return None
@@ -489,7 +489,7 @@ def createHKDb():
     cursor.close()
     db.close()
 
-def verifyHKDb():
+def verifyAdminDb():
     db = connect("cc_housekeeping")
     if db is None:
         return False
@@ -497,7 +497,7 @@ def verifyHKDb():
         db.close()
         return True
     
-def stmtCreateHKDatabase():
+def stmtCreateAdminDatabase():
     return 'CREATE DATABASE IF NOT EXISTS cc_housekeeping COLLATE utf8mb4_general_ci;'
 
 def stmtCreatePicturesTable():
