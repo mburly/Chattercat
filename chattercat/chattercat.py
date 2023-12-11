@@ -16,14 +16,11 @@ class Chattercat:
         self.stream = twitch.getStreamInfo(self.channelName)
         try:
             while(self.executing):
-                utils.ping(self.channelName)
                 if(self.stream is not None):
-                    utils.startPing(self.channelName)
                     self.start()
                     while(self.running):
                         self.run()
                     self.end()
-                    utils.endPing(self.channelName)
                 else:
                     self.stream = twitch.getStreamInfo(self.channelName)
                     if(self.stream is None):

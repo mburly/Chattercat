@@ -150,16 +150,3 @@ def printInfo(channelName, message):
 
 def statusMessage(channelName, online=True):
     return f'{channelName} just went live!' if online else f'{channelName} is now offline.'
-
-
-def ping(channelName):
-    with open('pings.txt', 'a', encoding='UTF-8') as file:
-                    file.write(f'{getDateTime()} {channelName} PING.\n')
-
-def startPing(channelName):
-    with open('pings.txt', 'a', encoding='UTF-8') as file:
-                    file.write(f'{getDateTime()} {channelName} PING. [started]\n')
-
-def endPing(channelName):
-    with open('pings.txt', 'a', encoding='UTF-8') as file:
-                    file.write(f'{getDateTime()} {channelName} PING. [ended]\n')

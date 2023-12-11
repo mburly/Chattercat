@@ -2,7 +2,7 @@ import os
 
 import mysql.connector
 
-from chattercat.constants import DIRS, EMOTE_TYPES, STATUS_MESSAGES
+from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, STATUS_MESSAGES
 import chattercat.twitch as twitch
 from chattercat.utils import Config, Response
 import chattercat.utils as utils
@@ -274,7 +274,7 @@ class Database:
         self.segmentId = self.cursor.lastrowid
 
     def updateChannelPicture(self):
-        db = connect("cc_housekeeping")
+        db = connect(ADMIN_DB_NAME)
         if(db is None):
             return None
         cursor = db.cursor(buffered=True)
@@ -433,7 +433,7 @@ class Database:
         return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
 
 def addExecution():
-    db = connect("cc_housekeeping")
+    db = connect(ADMIN_DB_NAME)
     if(db is None):
         return None
     cursor = db.cursor()
@@ -473,7 +473,7 @@ def createAdminDb():
         return None
     try:
         cursor.execute(stmtCreateAdminDatabase())
-        cursor.execute('USE cc_housekeeping;')
+        cursor.execute(f'USE {ADMIN_DB_NAME};')
     except:
         return None
     stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable(),
@@ -490,7 +490,7 @@ def createAdminDb():
     db.close()
 
 def verifyAdminDb():
-    db = connect("cc_housekeeping")
+    db = connect(ADMIN_DB_NAME)
     if db is None:
         return False
     else:
@@ -498,7 +498,7 @@ def verifyAdminDb():
         return True
     
 def stmtCreateAdminDatabase():
-    return 'CREATE DATABASE IF NOT EXISTS cc_housekeeping COLLATE utf8mb4_general_ci;'
+    return f'CREATE DATABASE IF NOT EXISTS {ADMIN_DB_NAME} COLLATE utf8mb4_general_ci;'
 
 def stmtCreatePicturesTable():
     return 'CREATE TABLE pictures (id INT AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(256), url VARCHAR(512), date_added DATETIME)'
