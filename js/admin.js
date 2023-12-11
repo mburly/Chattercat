@@ -403,6 +403,13 @@ function listeners() {
         remove(rowId);
     });
 
+    $('body').on('click', '#adminDeleteButton', function(){
+        var result = confirm('Are you sure you want to delete the database?');
+        if(result) {
+            $.post("php/adminClearDatabase.php");
+        } 
+    });
+
 }
 
 function loadMainData() {
@@ -459,7 +466,7 @@ function loadStatus() {
 }
 
 function loadTools() {
-    $('#content-admin').append('<span class="admin-title"><img class="admin-tools-icon" src="images/admin-tools-icon.png"><span class="admin-title-text">Admin Actions</span></span><ul class="actions-list"><li class="admin-button"><button class="admin-action-button" id="adminProfanityButton">Profanity</button></li><li class="admin-button"><button class="admin-action-button" id="adminChannelsButton">Manage channels</button></li><li class="admin-button"><button class="admin-action-button" id="adminUsersButton">Manage users</button></li><li class="admin-button"><button class="admin-action-button" id="adminArchiveButton">Archive database</button></li></ul>');
+    $('#content-admin').append('<span class="admin-title"><img class="admin-tools-icon" src="images/admin-tools-icon.png"><span class="admin-title-text">Admin Actions</span></span><ul class="actions-list"><li class="admin-button"><button class="admin-action-button" id="adminProfanityButton">Profanity</button></li><li class="admin-button"><button class="admin-action-button" id="adminChannelsButton">Manage channels</button></li><li class="admin-button"><button class="admin-action-button" id="adminUsersButton">Manage users</button></li><li class="admin-button"><button class="admin-action-button" id="adminArchiveButton">Archive database</button></li><li class="admin-button"><button class="admin-action-button" id="adminDeleteButton">Clear database</button></li></ul>');
 }
 
 function hide(id) {

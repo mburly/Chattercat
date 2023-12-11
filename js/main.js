@@ -95,9 +95,11 @@ function listeners() {
     });
     
     $('body').on('click','.channel-select',function(){
-        var id = $(this).attr('id').split('-')[0];
-        loadChannelPage(id);
-        state = "statsPage";
+        if(state != "statsPage") {
+            var id = $(this).attr('id').split('-')[0];
+            loadChannelPage(id);
+            state = "statsPage";
+        }
     });
     
     $('body').on('click','#mainExpandButton',function(){

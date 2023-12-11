@@ -302,15 +302,6 @@ input {
     margin-top:50px;
 }
 
-#picturesGroup {
-    margin-top:150px;
-    text-align:center;
-}
-
-.window-full-image:hover {
-    cursor: pointer;
-}
-
 .member-2 {
     background: linear-gradient(90deg,rgb(81, 0, 128),#7c0eaf);
 }
@@ -429,7 +420,7 @@ input {
 
 hr {
 	border: none;
-	width: 350px;
+	width: 300px;
 	height: 1px;
 	opacity: 0.5;
 	background: linear-gradient( to right, rgb(255, 0, 234) 20%, rgb(160, 0, 120) 20%, rgb(219, 0, 135) 36%, rgb(129, 0, 180) 36%, rgb(98, 0, 128) 60%, rgb(204, 0, 255) 60%, blue 100% );
@@ -997,6 +988,10 @@ hr {
     color:darkblue;
 }
 
+#adminDeleteButton {
+    color:darkred;
+}
+
 .channel-emotes-button {
     margin-bottom:5px;
 }
@@ -1382,4 +1377,17 @@ tr:nth-child(even) {
 .message-emote {
     height:32px;
     width:32px;
+}
+
+#mainLogo {
+    float:left;
+    height:32px;
+    opacity:75%;
+    /* transition:0.25s ease-out all; */
+}
+
+#mainLogo:hover {
+    opacity:100%;
+    cursor:pointer;
+    /* transition:0.25s ease-in all; */
 }
