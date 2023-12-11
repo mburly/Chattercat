@@ -39,6 +39,8 @@
                 }
             }
         }
+        $sql = 'TRUNCATE TABLE cc_housekeeping.pictures;';
+        $result = $conn->query($sql);
         returnInfo();
     }
 
