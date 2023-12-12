@@ -98,7 +98,7 @@
             $words = explode(" ", $message);
             foreach($words as $word) {
                 $index = array_search($word, $allEmotes);
-                if($index != false) {
+                if(gettype($index) == 'integer') {
                     if(!in_array($word, $seenWords)) {
                         $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '" title="' . $allEmotes[$index] . '">', $message);
                         array_push($seenWords, $word);
