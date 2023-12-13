@@ -98,11 +98,10 @@
             $message = $recent_chat["message"];
             $words = explode(" ", $message);
             foreach($words as $word) {
-                $index = array_search($word, $allEmotes);
-                if(gettype($index) == 'integer') {
+                $i = array_search($word, $allEmotes);
+                if(gettype($i) == 'integer') {
                     if(!in_array($word, $seenWords)) {
-                        $message = str_replace($word, '<div class="tooltip-top"><img class="emote" src="' . $allPaths[$index] . '" onerror="placeholder(this)"><span class="tooltiptext"><img class="emote-tooltip" id="' . $allEmotes[$index] . '-tooltip" src="' . $allPaths[$index] . '"></span></div>', $message);
-                        // $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '" title="' . $allEmotes[$index] . '">', $message);
+                        $message = str_replace($word, '<div class="tooltip-top"><img class="emote" src="' . $allPaths[$i] . '" onerror="placeholder(this)" title="' . $allEmotes[$i] . '"><span class="tooltiptext"><img class="emote-tooltip" id="' . $allEmotes[$i] . '-tooltip" src="' . $allPaths[$i] . '"></span></div>', $message);
                         array_push($seenWords, $word);
                     }
                 }
