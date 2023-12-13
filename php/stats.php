@@ -1,6 +1,7 @@
 <?php
     ob_start();
     $db_name = "cc_" . $_POST["channel"];
+    // $db_name = "cc_boxbox";
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -100,7 +101,8 @@
                 $index = array_search($word, $allEmotes);
                 if(gettype($index) == 'integer') {
                     if(!in_array($word, $seenWords)) {
-                        $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '" title="' . $allEmotes[$index] . '">', $message);
+                        $message = str_replace($word, '<div class="tooltip-top"><img class="emote" src="' . $allPaths[$index] . '" onerror="placeholder(this)"><span class="tooltiptext"><img class="emote-tooltip" id="' . $allEmotes[$index] . '-tooltip" src="' . $allPaths[$index] . '"></span></div>', $message);
+                        // $message = str_replace($word, '<img class="message-emote" src="' . $allPaths[$index] . '" title="' . $allEmotes[$index] . '">', $message);
                         array_push($seenWords, $word);
                     }
                 }

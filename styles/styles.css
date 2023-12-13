@@ -522,8 +522,6 @@ hr {
 
 .message-message {
     color:black;
-    text-overflow: ellipsis;
-    overflow:hidden;
     margin-left:2px;
     text-align:left;
 
