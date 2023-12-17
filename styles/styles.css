@@ -407,7 +407,7 @@ input {
     font-weight:700;
     margin-left:5px;
     color:purple;
-    width:100px;
+    width:fit-content;
     display:inline-block;
     overflow:hidden;
     text-overflow: ellipsis;
@@ -524,7 +524,7 @@ hr {
     color:black;
     margin-left:2px;
     text-align:left;
-
+    overflow:hidden;
 }
 
 .action-button:not(:first-child) {
