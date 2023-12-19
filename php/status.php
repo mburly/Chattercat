@@ -25,9 +25,9 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = 'SELECT end FROM executions ORDER BY id DESC LIMIT 1';
+        $sql = 'SELECT End FROM Executions ORDER BY ExecutionID DESC LIMIT 1';
         $result = $conn->query($sql);
-        $end = $result->fetch_assoc()["end"];
+        $end = $result->fetch_assoc()["End"];
         if($end == null) {
             returnInfo("online");
         }

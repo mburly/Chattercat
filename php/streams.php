@@ -36,9 +36,9 @@
                     continue;
                 }
                 array_push($channels, explode("cc_", $dbname)[1]);
-                $sql = 'SELECT url FROM pictures WHERE channel = "' . explode("cc_", $dbname)[1] . '" ORDER BY id DESC LIMIT 1;';
+                $sql = 'SELECT URL FROM Pictures WHERE Channel = "' . explode("cc_", $dbname)[1] . '" ORDER BY PictureID DESC LIMIT 1;';
                 $conn2 = new mysqli($host, $user, $password, "cc_housekeeping");
-                $url = $conn2->query($sql)->fetch_assoc()["url"];
+                $url = $conn2->query($sql)->fetch_assoc()["URL"];
                 if($url !== null) {
                     array_push($pictures, $url);
                 }

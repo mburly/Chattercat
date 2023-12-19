@@ -33,7 +33,7 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = 'DELETE FROM emotes WHERE source = ' . $source . ' AND emote_id ="' . $emote_id . '";';
+        $sql = 'DELETE FROM Emotes WHERE Source = ' . $source . ' AND EmoteID ="' . $emote_id . '";';
         $conn->query($sql);
         returnInfo();
     }

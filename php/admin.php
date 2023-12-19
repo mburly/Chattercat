@@ -33,7 +33,7 @@
         }
         else {
 
-            $sql = 'SELECT a.username as username FROM admins a INNER JOIN adminsessions ads ON a.id=ads.userId WHERE token = "' . $_COOKIE["cc_admin_token"] . '";';
+            $sql = 'SELECT a.Username as username FROM admins a INNER JOIN adminsessions ads ON a.AdminID=ads.UserID WHERE Token = "' . $_COOKIE["cc_admin_token"] . '";';
 	    $result = $conn->query($sql);
             $username = "";
             if($result->num_rows > 0) {
@@ -44,13 +44,13 @@
                 $executeStart = null;
                 $numChannelsOnline = 0;
                 $numMessages = 0;
-                $sql = 'SELECT * FROM executions ORDER BY id DESC LIMIT 1;';
+                $sql = 'SELECT * FROM Executions ORDER BY ExecutionID DESC LIMIT 1;';
                 $result = $conn->query($sql);
                 if($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
-                        if($row["end"] == null) {
+                        if($row["End"] == null) {
                             $executing = 1;
-                            $executeStart = $row["start"];
+                            $executeStart = $row["Start"];
                         }
                     }
                     foreach($channels as $channel) {
@@ -59,16 +59,16 @@
                             returnWithError($conn->connect_error);
                         }
                         else {
-                            $sql = 'SELECT COUNT(id) as num_messages FROM messages;';
+                            $sql = 'SELECT COUNT(MessageID) as num_messages FROM Messages;';
                             $result = $conn2->query($sql);
                             $count = $result->fetch_assoc()["num_messages"];
                             if($count != null) {
                                 $numMessages = $numMessages + $count;
                             }
     
-                            $sql = 'SELECT end_datetime FROM sessions ORDER BY id DESC LIMIT 1;';
+                            $sql = 'SELECT End FROM Sessions ORDER BY SessionID DESC LIMIT 1;';
                             $result = $conn2->query($sql);
-                            $count = $result->fetch_assoc()["end_datetime"];
+                            $count = $result->fetch_assoc()["End"];
                             if($count == null) {
                                 $numChannelsOnline = $numChannelsOnline + 1;
                             }

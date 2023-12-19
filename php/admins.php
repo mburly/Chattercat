@@ -29,11 +29,11 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = "SELECT username, role FROM admins;";
+        $sql = "SELECT Username, Role FROM Admins;";
         $result = $conn->query($sql);
         while($admin = $result->fetch_assoc()) {
-            $usernames .= '"' . $admin["username"] . '",';
-            $roles .=  $admin["role"] . ',';
+            $usernames .= '"' . $admin["Username"] . '",';
+            $roles .=  $admin["Role"] . ',';
         }
         $usernames = substr($usernames, 0, -1);
         $roles = substr($roles, 0, -1);

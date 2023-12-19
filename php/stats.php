@@ -1,7 +1,6 @@
 <?php
     ob_start();
     $db_name = "cc_" . $_POST["channel"];
-    // $db_name = "cc_boxbox";
     $configFile = fopen("../conf.ini", "r") or die("Unable to open file!");
     $host = '';
     $user = '';
@@ -27,75 +26,75 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = "SELECT code, count, path, source FROM top_emotes";
+        $sql = "SELECT Code, Count, Path, Source FROM TopEmotesView";
         $result = $conn->query($sql);
         $topEmoteCodes = '';
         $topEmoteCounts = '';
         $topEmotePaths = '';
         $topEmoteSources = '';
         while($emote = $result -> fetch_assoc()) {
-            $topEmoteCodes .=  '"' . addcslashes($emote["code"], '"\\/'). '", ';
-            $topEmoteCounts .=  '' . $emote["count"] . ', ';
-            $topEmotePaths .= '"' . $emote["path"] . '", ';
-            $topEmoteSources .= '' . $emote["source"] . ', ';
+            $topEmoteCodes .=  '"' . addcslashes($emote["Code"], '"\\/'). '", ';
+            $topEmoteCounts .=  '' . $emote["Count"] . ', ';
+            $topEmotePaths .= '"' . $emote["Path"] . '", ';
+            $topEmoteSources .= '' . $emote["Source"] . ', ';
         }
         $topEmoteCodes = substr($topEmoteCodes, 0, -2);
         $topEmoteCounts = substr($topEmoteCounts, 0, -2);
         $topEmotePaths = substr($topEmotePaths, 0, -2);
         $topEmoteSources = substr($topEmoteSources, 0, -2);
 
-        $sql = "SELECT COUNT(id) AS num_emotes FROM emotes;";
+        $sql = "SELECT COUNT(EmoteID) AS num_emotes FROM Emotes;";
         $result = $conn->query($sql);
         $numEmotes = $result->fetch_assoc()["num_emotes"];
 
-        $sql = "SELECT username, message_count FROM top_chatters;";
+        $sql = "SELECT Username, MessageCount FROM TopChattersView;";
         $result = $conn->query($sql);
         $topChatterNames = '';
         $topChatterCounts = '';
         while($top_chatter = $result -> fetch_assoc()) {
-            $topChatterNames .=  '"' . $top_chatter["username"] . '", ';
-            $topChatterCounts .= '' . $top_chatter["message_count"] . ', ';
+            $topChatterNames .=  '"' . $top_chatter["Username"] . '", ';
+            $topChatterCounts .= '' . $top_chatter["MessageCount"] . ', ';
         }
         $topChatterNames = substr($topChatterNames, 0, -2);
         $topChatterCounts = substr($topChatterCounts, 0, -2);
 
-        $sql = "SELECT COUNT(id) AS num_chatters FROM chatters;";
+        $sql = "SELECT COUNT(ChatterID) AS num_chatters FROM Chatters;";
         $result = $conn->query($sql);
         $numChatters = $result->fetch_assoc()["num_chatters"];
 
-        $sql = "SELECT username FROM recent_chatters;";
+        $sql = "SELECT Username FROM RecentChattersView;";
         $result = $conn->query($sql);
         $recentChatterNames = '';
         while($recent_chatter = $result -> fetch_assoc()) {
-            $recentChatterNames .=  '"' . $recent_chatter["username"] . '", ';
+            $recentChatterNames .=  '"' . $recent_chatter["Username"] . '", ';
         }
         $recentChatterNames = substr($recentChatterNames, 0, -2);
 
-        $sql = "SELECT COUNT(id) AS recent_session_count FROM messages WHERE session_id = (SELECT MAX(id) FROM sessions);";
+        $sql = "SELECT COUNT(MessageID) AS recent_session_count FROM Messages WHERE SessionID = (SELECT MAX(SessionID) FROM Sessions);";
         $result = $conn->query($sql);
         $recentSessionMessageCount = $result->fetch_assoc()["recent_session_count"];
 
-        $sql = "SELECT COUNT(id) AS num_messages FROM messages;";
+        $sql = "SELECT COUNT(MessageID) AS num_messages FROM Messages;";
         $result = $conn->query($sql);
         $numMessages = $result->fetch_assoc()["num_messages"];
 
         $allEmotes = array();
         $allPaths = array();
-        $sql = "SELECT code, path FROM emotes WHERE active = 1;";
+        $sql = "SELECT Code, Path FROM Emotes WHERE Active = 1;";
         $result = $conn->query($sql);
         while($emote = $result->fetch_assoc()) {
-            array_push($allEmotes, $emote["code"]);
-            array_push($allPaths, $emote["path"]);
+            array_push($allEmotes, $emote["Code"]);
+            array_push($allPaths, $emote["Path"]);
         }
 
-        $sql = "SELECT username, message, datetime FROM recent_messages;";
+        $sql = "SELECT Username, Message, Timestamp FROM RecentMessagesView;";
         $result = $conn->query($sql);
         $recentMessageNames = '';
         $recentMessageMessages = '';
         $recentMessageDatetimes = '';
         $seenWords = array();
         while($recent_chat = $result -> fetch_assoc()) {
-            $message = $recent_chat["message"];
+            $message = $recent_chat["Message"];
             $words = explode(" ", $message);
             foreach($words as $word) {
                 $i = array_search($word, $allEmotes);
@@ -106,45 +105,45 @@
                     }
                 }
             }
-            $recentMessageNames .=  '"' . $recent_chat["username"] . '", ';
+            $recentMessageNames .=  '"' . $recent_chat["Username"] . '", ';
             $recentMessageMessages .=  '"' . addcslashes(removeUnicode($message), '"\\/') . '", ';
-            $recentMessageDatetimes .=  '"' . $recent_chat["datetime"] . '", ';
+            $recentMessageDatetimes .=  '"' . $recent_chat["Timestamp"] . '", ';
             $seenWords = array();
         }
         $recentMessageNames = substr($recentMessageNames, 0, -2);
         $recentMessageMessages = substr($recentMessageMessages, 0, -2);
         $recentMessageDatetimes = substr($recentMessageDatetimes, 0, -2);
         
-        $sql = "SELECT start_datetime, length FROM sessions ORDER BY id DESC LIMIT 5;";
+        $sql = "SELECT Start, Length FROM Sessions ORDER BY SessionID DESC LIMIT 5;";
         $result = $conn->query($sql);
         $recentSessionStartDatetimes = '';
         $recentSessionLengths = '';
         while($recentSession = $result -> fetch_assoc()) {
-            if($recentSession["length"] == null)
+            if($recentSession["Length"] == null)
             {
                 $length = "null";
             }
             else
             {
-                $length = $recentSession["length"];
+                $length = $recentSession["Length"];
             }
-            $recentSessionStartDatetimes .=  '"' . $recentSession["start_datetime"] . '", ';
+            $recentSessionStartDatetimes .=  '"' . $recentSession["Start"] . '", ';
             $recentSessionLengths .=  '"' . $length . '", ';
         }
         $recentSessionStartDatetimes = substr($recentSessionStartDatetimes, 0, -2);
         $recentSessionLengths = substr($recentSessionLengths, 0, -2);
 
-        $sql = "SELECT name, length, stream_title, session_id FROM recent_segments;";
+        $sql = "SELECT Name, Length, Title, SessionID FROM RecentSegmentsView;";
         $result = $conn->query($sql);
         $recentSegmentCategories = '';
         $recentSegmentLengths = '';
         $recentSegmentTitles = '';
         $recentSegmentSessions = '';
         while($recentSegment = $result -> fetch_assoc()) {
-            $recentSegmentCategories .=  '"' . $recentSegment["name"] . '", ';
-            $recentSegmentLengths .=  '"' . $recentSegment["length"] . '", ';
-            $recentSegmentTitles .=  '"' . addcslashes($recentSegment["stream_title"], '"\\/') . '", ';
-            $recentSegmentSessions .=  '' . $recentSegment["session_id"] . ', ';
+            $recentSegmentCategories .=  '"' . $recentSegment["Name"] . '", ';
+            $recentSegmentLengths .=  '"' . $recentSegment["Length"] . '", ';
+            $recentSegmentTitles .=  '"' . addcslashes($recentSegment["Title"], '"\\/') . '", ';
+            $recentSegmentSessions .=  '' . $recentSegment["SessionID"] . ', ';
         }
         $recentSegmentCategories = substr($recentSegmentCategories, 0, -2);
         $recentSegmentLengths = substr($recentSegmentLengths, 0, -2);

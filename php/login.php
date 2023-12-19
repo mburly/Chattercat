@@ -27,13 +27,13 @@
     else {
         $username = preg_replace( "/\r|\n/", "", $_POST["username"] );
         $password = preg_replace( "/\r|\n/", "", md5($_POST["password"]));
-        $sql = 'SELECT id FROM admins WHERE username = "' . $username . '" AND password = "' . $password . '";';
+        $sql = 'SELECT AdminID FROM Admins WHERE Username = "' . $username . '" AND Password = "' . $password . '";';
         $result = $conn->query($sql);
         if($result->num_rows > 0) {
             if(!isset($_COOKIE["cc_admin_token"])) {
-                $id = $result->fetch_assoc()["id"];
+                $id = $result->fetch_assoc()["AdminID"];
                 $token = md5(getRandomWord());
-                $sql = 'INSERT INTO adminsessions (token, userId, datetime, expires) VALUES ("' . $token . '","' . $id . '",NOW(),DATE_ADD(NOW(), INTERVAL 1 DAY));';
+                $sql = 'INSERT INTO Adminsessions (Token, UserID, Timestamp, Expires) VALUES ("' . $token . '","' . $id . '",NOW(),DATE_ADD(NOW(), INTERVAL 1 DAY));';
                 $conn->query($sql);
                 setcookie("cc_admin_token", $token, time() + (86400 * 30), "/"); // 86400 = 1 day
                 returnInfo("success");

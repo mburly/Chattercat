@@ -524,7 +524,6 @@ hr {
     color:black;
     margin-left:2px;
     text-align:left;
-    overflow:hidden;
 }
 
 .action-button:not(:first-child) {

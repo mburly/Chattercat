@@ -129,6 +129,9 @@ def verify():
             streams.remove(stream)
         else:
             printInfo(stream, 'Channel validated.') 
+    if(streams == []):
+        printError(None, ERROR_MESSAGES['invalid_streams'])
+        sys.exit()
     printInfo(None, STATUS_MESSAGES['validating_complete'])
     if(db.verifyAdminDb() is False):
         db.createAdminDb()

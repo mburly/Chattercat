@@ -350,19 +350,19 @@ function listeners() {
         if(numChanges > 0) {
             if(numChanges == 1) {
                 if(newCode != '') {
-                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCode, type: "code"});   
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCode, type: "Code"});   
                 }
                 else if(newCount != -1) {
-                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCount, type: "count"});
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newCount, type: "Count"});
                 }
                 else if(newUrl != '') {
-                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newUrl, type: "url"});
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newUrl, type: "URL"});
                 }
                 else if(newPath != '') {
-                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newPath, type: "path"});
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newPath, type: "Path"});
                 }
                 else if(newDate != '') {
-                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newDate, type: "date"});
+                    $.post("php/adminEmoteUpdate.php", {channel: channel, source: source, emote_id: emote_id, new_value: newDate, type: "Added"});
                 }
             }
             else {

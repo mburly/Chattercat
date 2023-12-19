@@ -23,13 +23,15 @@ class Database:
                 for stmt in sql:
                     try:
                         self.cursor.execute(stmt)
-                    except:
+                    except Exception as e:
+                        utils.printError(self.channelName, e)
                         return None
                 self.db.commit()
             else:
                 try:
                     self.cursor.execute(sql)
-                except:
+                except Exception as e:
+                    utils.printError(self.channelName, e)
                     return None
                 self.db.commit()
         except:
@@ -68,18 +70,12 @@ class Database:
         cursor.close()
         db.close()
         self.connect()
-        self.commit([self.stmtCreateChattersTable(), self.stmtCreateSessionsTable(), self.stmtCreateGamesTable(), self.stmtCreateSegmentsTable(),
-                     self.stmtCreateMessagesTable(), self.stmtCreateEmotesTable(), self.stmtCreateEmoteLogsTable(), self.stmtCreateRecentSessionsView(),
-                     self.stmtCreateTopChattersView(), self.stmtCreateTopEmotesView(), self.stmtCreateRecentSegmentsView(),
-                     self.stmtCreateRecentMessagesView(), self.stmtCreateRecentChattersView()])
+        self.commit(self.setupDb())
         try:
             self.commit(self.stmtCreateEmoteStatusChangeTrigger())
         except:
             pass
-        try:
-            self.populateEmotesTable()
-        except:
-            return None
+        self.populateEmotesTable()
         self.downloadEmotes()
 
     def startSession(self, stream):
@@ -123,7 +119,14 @@ class Database:
             message = message.replace("\"", "\'")
         if('\\' in message):
             message = message.replace('\\', '\\\\')
-        self.commit([self.stmtInsertNewMessage(message, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
+        if(len(message.split('ACTION :')) > 1):
+            message = message.replace('ACTION :', '').lstrip()
+            self.commit([self.stmtInsertNewMessage(message, 1, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
+        elif(len(message.split('ACTION')) > 1):
+            message = message.replace('ACTION', '').lstrip()
+            self.commit([self.stmtInsertNewMessage(message, 1, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
+        else:
+            self.commit([self.stmtInsertNewMessage(message, 0, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
         
     def logMessageEmotes(self, message):
         messageEmotes = utils.parseMessageEmotes(self.channelEmotes, message)
@@ -273,6 +276,12 @@ class Database:
         self.commit(self.stmtInsertNewSegment())
         self.segmentId = self.cursor.lastrowid
 
+    def setupDb(self):
+        return [self.stmtCreateChattersTable(), self.stmtCreateSessionsTable(), self.stmtCreateGamesTable(), self.stmtCreateSegmentsTable(),
+                self.stmtCreateMessagesTable(), self.stmtCreateEmotesTable(), self.stmtCreateEmoteLogsTable(), self.stmtCreateRecentSessionsView(),
+                self.stmtCreateTopChattersView(), self.stmtCreateTopEmotesView(), self.stmtCreateRecentSegmentsView(),
+                self.stmtCreateRecentMessagesView(), self.stmtCreateRecentChattersView()]
+
     def updateChannelPicture(self):
         db = connect(ADMIN_DB_NAME)
         if(db is None):
@@ -312,125 +321,122 @@ class Database:
         return f'CREATE DATABASE IF NOT EXISTS cc_{self.channelName} COLLATE utf8mb4_general_ci;'
 
     def stmtCreateChattersTable(self):
-        return f'CREATE TABLE chatters (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(512), first_date DATE, last_date DATE) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Chatters (ChatterID INT AUTO_INCREMENT PRIMARY KEY, Username VARCHAR(512), FirstSeen DATE, LastSeen DATE) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateSessionsTable(self):
-        return f'CREATE TABLE sessions (id INT AUTO_INCREMENT PRIMARY KEY, start_datetime DATETIME, end_datetime DATETIME, length TIME) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Sessions (SessionID INT AUTO_INCREMENT PRIMARY KEY, Start DATETIME, End DATETIME, Length TIME) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateMessagesTable(self):
-        return  f'CREATE TABLE messages (id INT AUTO_INCREMENT PRIMARY KEY, message VARCHAR(512) COLLATE utf8mb4_general_ci, session_id INT, segment_id INT, chatter_id INT, datetime DATETIME, FOREIGN KEY (session_id) REFERENCES sessions(id), FOREIGN KEY (segment_id) REFERENCES segments(id), FOREIGN KEY (chatter_id) REFERENCES chatters(id)) COLLATE utf8mb4_general_ci;'
+        return  f'CREATE TABLE Messages (MessageID INT AUTO_INCREMENT PRIMARY KEY, Message VARCHAR(512) COLLATE utf8mb4_general_ci, Action BOOLEAN, ChatterID INT, SessionID INT, SegmentID INT, Timestamp DATETIME, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (SegmentID) REFERENCES Segments(SegmentID), FOREIGN KEY (ChatterID) REFERENCES Chatters(ChatterID)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateEmotesTable(self):
-        return f'CREATE TABLE emotes (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(255) COLLATE utf8mb4_general_ci, emote_id VARCHAR(255) COLLATE utf8mb4_general_ci, count INT DEFAULT 0, url VARCHAR(512) COLLATE utf8mb4_general_ci, path VARCHAR(512) COLLATE utf8mb4_general_ci, date_added DATE, source VARCHAR(255) COLLATE utf8mb4_general_ci, active BOOLEAN) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Emotes (EmoteID VARCHAR(255) COLLATE utf8mb4_general_ci, Code VARCHAR(255) COLLATE utf8mb4_general_ci, Count INT DEFAULT 0, URL VARCHAR(512) COLLATE utf8mb4_general_ci, Path VARCHAR(512) COLLATE utf8mb4_general_ci, Added DATE, Source INT, Active BOOLEAN, PRIMARY KEY(EmoteID, Source)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateTopEmotesView(self):
-        return f'CREATE VIEW top_emotes AS SELECT code, count, path, source FROM emotes GROUP BY code ORDER BY count DESC LIMIT 10;'
+        return f'CREATE VIEW TopEmotesView AS SELECT Code, Count, Path, Source FROM Emotes GROUP BY Code ORDER BY Count DESC LIMIT 10;'
 
     def stmtCreateTopChattersView(self):
-        return f'CREATE VIEW top_chatters AS SELECT c.username, COUNT(m.id) AS message_count FROM messages m INNER JOIN chatters c ON m.chatter_id=c.id GROUP BY c.username ORDER BY COUNT(m.id) DESC LIMIT 5;'
+        return f'CREATE VIEW TopChattersView AS SELECT c.Username, COUNT(m.MessageID) AS MessageCount FROM Messages m INNER JOIN Chatters c ON m.ChatterID=c.ChatterID GROUP BY c.Username ORDER BY COUNT(m.MessageID) DESC LIMIT 5;'
 
     def stmtCreateRecentChattersView(self):
-        return f'CREATE VIEW recent_chatters AS SELECT DISTINCT (SELECT username FROM chatters WHERE id = chatter_id) AS username FROM messages GROUP BY id ORDER BY id DESC LIMIT 9;'
+        return f'CREATE VIEW RecentChattersView AS SELECT DISTINCT (SELECT Username FROM Chatters c WHERE c.ChatterID = m.ChatterID) AS Username FROM Messages m GROUP BY MessageID ORDER BY MessageID DESC LIMIT 9;'
     
     def stmtCreateRecentMessagesView(self):
-        return f'CREATE VIEW recent_messages AS SELECT (SELECT username FROM chatters WHERE id = chatter_id) AS username, message, datetime FROM messages ORDER BY id DESC LIMIT 20;'
+        return f'CREATE VIEW RecentMessagesView AS SELECT (SELECT c.Username FROM Chatters c WHERE c.ChatterID = m.ChatterID) AS Username, Message, Timestamp FROM Messages m ORDER BY m.MessageID DESC LIMIT 20;'
 
     def stmtCreateRecentSegmentsView(self):
-        return f'CREATE VIEW recent_segments AS SELECT g.name, s.length, s.stream_title, s.session_id FROM games g INNER JOIN segments s ON g.id=s.game_id WHERE s.session_id IN (SELECT * FROM (SELECT id FROM sessions ORDER BY id DESC) AS t) ORDER BY s.id DESC;'
+        return f'CREATE VIEW RecentSegmentsView AS SELECT g.Name, s.Length, s.Title, s.SessionID FROM Games g INNER JOIN Segments s ON g.GameID=s.GameID WHERE s.SessionID IN (SELECT * FROM (SELECT SessionID FROM Sessions ORDER BY SessionID DESC) AS t) ORDER BY s.SegmentID DESC;'
     
     def stmtCreateRecentSessionsView(self):
-        return f'CREATE VIEW recent_sessions AS SELECT id, (SELECT seg.stream_title FROM sessions ses INNER JOIN segments seg ON ses.id=seg.session_id ORDER BY seg.id DESC LIMIT 1), DATE_FORMAT(end_datetime, "%c/%e/%Y"), length FROM sessions ORDER BY id DESC LIMIT 5'
+        return f'CREATE VIEW RecentSessionsView AS SELECT SessionID, (SELECT seg.Title FROM Sessions ses INNER JOIN Segments seg ON ses.SessionID=seg.SessionID ORDER BY seg.SegmentID DESC LIMIT 1), DATE_FORMAT(End, "%c/%e/%Y"), Length FROM Sessions ORDER BY SessionID DESC LIMIT 5'
 
     def stmtCreateEmoteLogsTable(self):
-        return f'CREATE TABLE logs (id INT AUTO_INCREMENT PRIMARY KEY, emote_id INT, old INT, new INT, user_id VARCHAR(512), datetime DATETIME, FOREIGN KEY (emote_id) REFERENCES emotes(id)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Logs (LogID INT AUTO_INCREMENT PRIMARY KEY, EmoteID VARCHAR(255), Source INT, Old INT, New INT, UserID VARCHAR(512), Timestamp DATETIME, FOREIGN KEY (EmoteID, Source) REFERENCES Emotes(EmoteID, Source)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateGamesTable(self):
-        return f'CREATE TABLE games (id INT PRIMARY KEY, name VARCHAR(255)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Games (GameID INT PRIMARY KEY, Name VARCHAR(255)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateSegmentsTable(self):
-        return f'CREATE TABLE segments (id INT AUTO_INCREMENT PRIMARY KEY, segment INT, stream_title VARCHAR(512), start_datetime DATETIME, end_datetime DATETIME, length TIME, session_id INT, game_id INT, FOREIGN KEY (session_id) REFERENCES sessions(id), FOREIGN KEY (game_id) REFERENCES games(id)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Segments (SegmentID INT AUTO_INCREMENT PRIMARY KEY, Segment INT, Title VARCHAR(512), Start DATETIME, End DATETIME, Length TIME, SessionID INT, GameID INT, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (GameID) REFERENCES Games(GameID)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateEmoteStatusChangeTrigger(self):
-        return f'CREATE TRIGGER emote_status_change AFTER UPDATE ON emotes FOR EACH ROW IF OLD.active != NEW.active THEN INSERT INTO logs (emote_id, new, old, user_id, datetime) VALUES (OLD.id, NEW.active, OLD.active, NULL, UTC_TIMESTAMP()); END IF;'
-
-    def stmtCreateEmoteInsertTrigger(self):
-        return f'CREATE TRIGGER new_emote AFTER INSERT ON emotes FOR EACH ROW INSERT INTO logs (emote_id, new, old, user_id, datetime) VALUES (id, active, active, NULL, UTC_TIMESTAMP());'
+        return f'CREATE TRIGGER EmoteStatusChangeTigger AFTER UPDATE ON Emotes FOR EACH ROW IF OLD.Active != NEW.Active THEN INSERT INTO Logs (EmoteID, Source, Old, New, UserID, Timestamp) VALUES (OLD.EmoteID, OLD.Source, OLD.Active, NEW.Active, NULL, UTC_TIMESTAMP()); END IF;'
 
     def stmtSelectEmotesToDownload(self):
-        return f'SELECT url, emote_id, code, source FROM emotes WHERE path IS NULL;'
+        return f'SELECT URL, EmoteID, Code, Source FROM Emotes WHERE Path IS NULL;'
 
     def stmtUpdateEmotePath(self, path, emoteId, source):
-        return f'UPDATE emotes SET path = "{path}" WHERE emote_id LIKE "{emoteId}" AND source LIKE "{source}";'
+        return f'UPDATE Emotes SET Path = "{path}" WHERE EmoteID LIKE "{emoteId}" AND Source = {source};'
 
     def stmtSelectMostRecentSession(self):
-        return f'SELECT MAX(id) FROM sessions'
+        return f'SELECT MAX(SessionID) FROM Sessions'
 
     def stmtUpdateSessionEndDatetime(self):
-        return f'UPDATE sessions SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.sessionId}'
+        return f'UPDATE Sessions SET End = "{utils.getDateTime()}" WHERE SessionID = {self.sessionId}'
 
     def stmtUpdateSessionLength(self):
-        return f'UPDATE sessions SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.sessionId}'
+        return f'UPDATE Sessions SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SessionID = {self.sessionId}'
 
     def stmtSelectActiveEmotes(self):
-        return f'SELECT code FROM emotes WHERE ACTIVE = 1;'
+        return f'SELECT Code FROM Emotes WHERE Active = 1;'
 
     def stmtSelectEmoteByStatus(self, active):
-        return f'SELECT emote_id, source FROM emotes WHERE active = {active};'
+        return f'SELECT EmoteID, Source FROM Emotes WHERE Active = {active};'
 
     def stmtSelectChatterIdByUsername(self, username):
-        return f'SELECT id FROM chatters WHERE username = "{username}";'
+        return f'SELECT ChatterID FROM Chatters WHERE Username = "{username}";'
 
     def stmtSelectProfilePictureUrl(self):
-        return f'SELECT url FROM pictures WHERE channel = "{self.channelName}" ORDER BY id DESC LIMIT 1;'
+        return f'SELECT URL FROM Pictures WHERE Channel = "{self.channelName}" ORDER BY PictureID DESC LIMIT 1;'
 
     def stmtInsertNewChatter(self, username):
-        return f'INSERT INTO chatters (username, first_date, last_date) VALUES ("{username}", "{utils.getDate()}", "{utils.getDate()}");'
+        return f'INSERT INTO Chatters (Username, FirstSeen, LastSeen) VALUES ("{username}", "{utils.getDate()}", "{utils.getDate()}");'
         
-    def stmtInsertNewMessage(self, message, chatterId):
-        return f'INSERT INTO messages (message, session_id, segment_id, chatter_id, datetime) VALUES ("{message}", {self.sessionId}, {self.segmentId}, {chatterId}, "{utils.getDateTime()}");'    
+    def stmtInsertNewMessage(self, message, action, chatterId):
+        return f'INSERT INTO Messages (Message, Action, SessionID, SegmentID, ChatterID, Timestamp) VALUES ("{message}", {action}, {self.sessionId}, {self.segmentId}, {chatterId}, "{utils.getDateTime()}");'    
 
     def stmtInsertNewPicture(self):
-        return f'INSERT INTO pictures (channel, url, date_added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{utils.getDateTime()}")'
+        return f'INSERT INTO Pictures (Channel, URL, Added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{utils.getDateTime()}")'
     
     def stmtUpdateChatterLastDate(self, chatterId):
-        return f'UPDATE chatters SET last_date = "{utils.getDate()}" WHERE id = {chatterId};'
+        return f'UPDATE Chatters SET LastSeen = "{utils.getDate()}" WHERE ChatterID = {chatterId};'
 
     def stmtUpdateEmoteCount(self, emote):
-        return f'UPDATE emotes SET count = count + 1 WHERE code = BINARY "{emote}" AND active = 1;'
+        return f'UPDATE Emotes SET Count = Count + 1 WHERE Code = BINARY "{emote}" AND Active = 1;'
 
     def stmtInsertNewEmote(self, emote, source):
-        return f'INSERT INTO emotes (code, emote_id, url, date_added, source, active) VALUES ("{emote.code}","{emote.id}","{emote.url}","{utils.getDate()}","{source}",1);'
+        return f'INSERT INTO Emotes (EmoteID, Code, URL, Added, Source, Active) VALUES ("{emote.id}","{emote.code}","{emote.url}","{utils.getDate()}", {source}, 1);'
 
     def stmtUpdateEmoteStatus(self, active, emoteId):
-        return f'UPDATE emotes SET active = {active} WHERE emote_id = "{emoteId}";'
+        return f'UPDATE Emotes SET Active = {active} WHERE EmoteID = "{emoteId}";'
 
     def stmtInsertNewSession(self):
-        return f'INSERT INTO sessions (start_datetime, end_datetime, length) VALUES ("{utils.getDateTime()}", NULL, NULL);'
+        return f'INSERT INTO Sessions (Start, End, Length) VALUES ("{utils.getDateTime()}", NULL, NULL);'
 
     def stmtSelectGameById(self):
-        return f'SELECT id FROM games WHERE id = {self.gameId};'
+        return f'SELECT GameID FROM Games WHERE GameID = {self.gameId};'
 
     def stmtInsertNewGame(self):
         self.gameName = 'N/A' if self.gameName == '' else self.gameName
         if('\"' in self.gameName):
             self.gameName = self.gameName.replace('"', '\\"')
-        return f'INSERT INTO games (id, name) VALUES ({self.gameId}, "{self.gameName}");'
+        return f'INSERT INTO Games (GameID, Name) VALUES ({self.gameId}, "{self.gameName}");'
 
     def stmtInsertNewSegment(self):
         if('\\' in self.streamTitle):
             self.streamTitle = self.streamTitle.replace('\\', '\\\\')
         if('"' in self.streamTitle):
             self.streamTitle = self.streamTitle.replace('"', '\\"')
-        return f'INSERT INTO segments (session_id, stream_title, segment, start_datetime, end_datetime, length, game_id) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{utils.getDateTime()}", NULL, NULL, {self.gameId});'
+        return f'INSERT INTO Segments (SessionID, Title, Segment, Start, End, Length, GameID) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{utils.getDateTime()}", NULL, NULL, {self.gameId});'
 
     def stmtSelectSegmentNumberBySessionId(self):
-        return f'SELECT MAX(segment) FROM segments WHERE session_id = {self.sessionId};'
+        return f'SELECT MAX(Segment) FROM Segments WHERE SessionID = {self.sessionId};'
 
     def stmtUpdateSegmentEndDatetime(self):
-        return f'UPDATE segments SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.segmentId};'
+        return f'UPDATE Segments SET End = "{utils.getDateTime()}" WHERE SegmentID = {self.segmentId};'
 
     def stmtUpdateSegmentLength(self):
-        return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
+        return f'UPDATE Segments SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SegmentID = {self.segmentId}'
 
 def addExecution():
     db = connect(ADMIN_DB_NAME)
@@ -501,19 +507,19 @@ def stmtCreateAdminDatabase():
     return f'CREATE DATABASE IF NOT EXISTS {ADMIN_DB_NAME} COLLATE utf8mb4_general_ci;'
 
 def stmtCreatePicturesTable():
-    return 'CREATE TABLE pictures (id INT AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(256), url VARCHAR(512), date_added DATETIME)'
+    return 'CREATE TABLE Pictures (PictureID INT AUTO_INCREMENT PRIMARY KEY, Channel VARCHAR(256), URL VARCHAR(512), Added DATETIME)'
 
 def stmtCreateAdminsTable():
-    return 'CREATE TABLE admins (id INT AUTO_INCREMENT PRIMARY KEY, password VARCHAR(256), role INT, username VARCHAR(256))'
+    return 'CREATE TABLE Admins (AdminID INT AUTO_INCREMENT PRIMARY KEY, Username VARCHAR(256), Password VARCHAR(256), Role INT)'
 
 def stmtCreateAdminSessionsTable():
-    return 'CREATE TABLE adminsessions (id INT AUTO_INCREMENT PRIMARY KEY, token VARCHAR(256), userId INT, datetime DATETIME, expires DATETIME)'
+    return 'CREATE TABLE AdminSessions (AdminSessionID INT AUTO_INCREMENT PRIMARY KEY, Token VARCHAR(256), UserID INT, Timestamp DATETIME, Expires DATETIME)'
 
 def stmtCreateExecutionsTable():
-    return 'CREATE TABLE executions (id INT AUTO_INCREMENT PRIMARY KEY, userId INT, start DATETIME, end DATETIME)'
+    return 'CREATE TABLE Executions (ExecutionID INT AUTO_INCREMENT PRIMARY KEY, UserID INT, Start DATETIME, End DATETIME)'
 
 def stmtInsertExecution():
-    return f'INSERT INTO executions (start, end, userId) VALUES ("{utils.getDateTime()}",NULL,NULL);'
+    return f'INSERT INTO Executions (Start, End, UserID) VALUES ("{utils.getDateTime()}",NULL,NULL);'
 
 def stmtUpdateExecution():
-    return f'UPDATE executions SET end = "{utils.getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
+    return f'UPDATE Executions SET End = "{utils.getDateTime()}" WHERE ExecutionID = (SELECT MAX(ExecutionID) FROM Executions);'

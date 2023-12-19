@@ -27,10 +27,10 @@
     else {
         if(isset($_COOKIE["cc_admin_token"])) {
             $token = $_COOKIE["cc_admin_token"];
-            $sql = 'SELECT * FROM adminsessions WHERE token = "' . $token . '";';
+            $sql = 'SELECT * FROM Adminsessions WHERE Token = "' . $token . '";';
             $result = $conn->query($sql);
             if($result->num_rows > 0) {
-                $expires = strtotime($result->fetch_assoc()["expires"]);
+                $expires = strtotime($result->fetch_assoc()["Expires"]);
                 if($expires - time() > 0) {
                     returnWithInfo("Success");
                 }

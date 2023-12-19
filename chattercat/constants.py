@@ -52,7 +52,8 @@ ERROR_MESSAGES = { 'host':'Unable to connect to host. Likely lost internet conne
                    'offline':'Stream offline. Please try another channel or try again later.',
                    'config':'Bad value(s) provided in the configuration file. Please check and update config.ini.',
                    'connection':'No internet connection found. Please try again.',
-                   'no_streams':'No streams provided. Please add at least one channel to streams.txt' }
+                   'no_streams':'No streams provided. Please add at least one channel to streams.txt',
+                   'invalid_streams':'No valid streams provided. Please add at least one valid channel name in streams.txt' }
 STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
                     'updates':'Checking for emote updates...',
                     'updates_complete':'Emote update check complete.',
