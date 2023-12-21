@@ -100,7 +100,8 @@
                 $i = array_search($word, $allEmotes);
                 if(gettype($i) == 'integer') {
                     if(!in_array($word, $seenWords)) {
-                        $message = str_replace($word, '<div class="tooltip-top"><img class="emote" src="' . $allPaths[$i] . '" onerror="placeholder(this)" title="' . $allEmotes[$i] . '"><span class="tooltiptext"><img class="emote-tooltip" id="' . $allEmotes[$i] . '-tooltip" src="' . $allPaths[$i] . '"></span></div>', $message);
+                        $reg = '/\b' . preg_quote($word, '/') . '\b/';
+                        $message = preg_replace($reg, '<div class="tooltip-top"><img class="emote" src="' . $allPaths[$i] . '" onerror="placeholder(this)" title="' . $allEmotes[$i] . '"><span class="tooltiptext"><img class="emote-tooltip" id="' . $allEmotes[$i] . '-tooltip" src="' . $allPaths[$i] . '"></span></div>', $message);
                         array_push($seenWords, $word);
                     }
                 }

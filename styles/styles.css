@@ -53,6 +53,10 @@
     .window {
         width:295px !important;
     }
+
+    .window-group-member:not(:first-child) {
+        margin-left:0px;
+    }
   }
 
 @media (max-width: 1024px) {
@@ -94,10 +98,14 @@ input {
     user-select: none;
 }
 
+.index-window {
+    width:300px !important;
+}
+
 .window {
     margin-left:auto;
     margin-right:auto;
-    width:300px;
+    width:400px;
     vertical-align: top;
 }
 
