@@ -16,7 +16,7 @@ function callChannelEmotes(channel, data) {
 
 function callIndex() {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
-    $.get("php/index.php", function(data, status) {
+    $.get("php/index.php", function(data) {
         var data = JSON.parse(data);
         hide("mainLoad");
         for(let i = 0; i < data["channels"].length; i++)
@@ -140,7 +140,7 @@ function listeners() {
             showLoginPage();
         }
         else {
-            $.get("php/validate.php", function(data, status) {
+            $.get("php/validate.php", function(data) {
                 if(data == "") {
                     showLoginPage();
                     return;
@@ -433,7 +433,7 @@ function loadChannelPage(id)
 }
 
 function loadStatus() {
-    $.get("php/status.php", function(data, status) {
+    $.get("php/status.php", function(data) {
         var data = JSON.parse(data);
         if(data["status"] == "online") {
             remove("statusLoader");
@@ -454,7 +454,7 @@ function showLoginPage() {
     {
         hide(state);
     }
-    var login_page = '<div class="window" id="login"><div class="title-bar window-blue"><div class="title-bar-text"><i class="fas fa-user"></i>Chattercat - Log in</div></div><div class="window-body" id="loginWindowBody"><label for="uname"><span class="login-text">Username:</span></label><input id="username" type="text" placeholder="Enter Username" name="uname" autocomplete="off" required><p><label for="psw"><span class="login-text">Password:</span></label><input id="password" type="password" placeholder="Enter Password" name="psw" autocomplete="off" required><button type="submit" id="loginButton">Login</button></div><span class="bad-login" id="badLoginText">Invalid login. Please try again.</span></div>';
+    var login_page = '<div class="window login-window" id="login"><div class="title-bar window-blue"><div class="title-bar-text"><i class="fas fa-user"></i>Chattercat - Log in</div></div><div class="window-body" id="loginWindowBody"><label for="uname"><span class="login-text">Username:</span></label><input id="username" type="text" placeholder="Enter Username" name="uname" autocomplete="off" required><p><label for="psw"><span class="login-text">Password:</span></label><input id="password" type="password" placeholder="Enter Password" name="psw" autocomplete="off" required><button type="submit" id="loginButton">Login</button></div><span class="bad-login" id="badLoginText">Invalid login. Please try again.</span></div>';
     $('body').append(login_page);
     state = "login";
 }
@@ -487,172 +487,36 @@ function placeholder(image) {
 // Utility Functions
 // 
 
-// mil = military time
-function milToTime(mil)
-{
-    var hours = mil.getHours();
-    var minutes = mil.getMinutes();
-    var seconds = mil.getSeconds();
-    var meridiem = '';
-    var ret = '';
-    if(hours > 12)
-    {
-        ret += hours-12 + ':';
-        meridiem = 'PM';
-    }
-    else
-    {
-        if(hours == 0)
-        {
-            hours += 12;
-        }
-        ret+= hours + ':';
-        meridiem = 'AM';
-    }
-    if(minutes < 10)
-    {
-        ret += '0' + minutes;
-    }
-    else
-    {
-        ret += minutes;
-    }
-    // if(seconds < 10)
-    // {
-    //     ret += '0' + seconds + '';
-    // }
-    // else
-    // {
-    //     ret += seconds + '';
-    // }
-    ret += meridiem;
-    return ret;
+function milToTime(mil) {
+    let pad = num => num.toString().padStart(2, '0');
+    let hours = mil.getHours();
+    let minutes = mil.getMinutes();
+    let meridiem = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${hours}:${pad(minutes)}${meridiem}`;
 }
 
-function milToDatetime(mil)
-{
-    var year = mil.getFullYear().toString().substring(2,4);
-    var month = mil.getMonth()+1;
-    var day = mil.getDate();
-    var hours = mil.getHours();
-    var minutes = mil.getMinutes();
-    var seconds = mil.getSeconds();
-    var meridiem = '';
-    var ret = [];
-    ret["date"] = month + '/' + day + '/' + year;
-    ret["time"] = '';
-    if(hours >= 12)
-    {
-        if(hours > 12)
-        {
-            ret["time"] += hours-12 + ':';
-        }
-        else
-        {
-            ret["time"] += hours + ':';
-        }
-        meridiem = 'PM';
-    }
-    else
-    {
-        if(hours == 0)
-        {
-            hours += 12;
-        }
-        ret["time"] += hours + ':';
-        meridiem = 'AM';
-    }
-    if(minutes < 10)
-    {
-        ret["time"] += '0' + minutes + ':';
-    }
-    else
-    {
-        ret["time"] += minutes + ':';
-    }
-    if(seconds < 10)
-    {
-        ret["time"] += '0' + seconds + '';
-    }
-    else
-    {
-        ret["time"] += seconds + '';
-    }
-    ret["time"] += meridiem;
-    return ret;
+
+function milToDatetime(mil) {
+    let pad = num => num.toString().padStart(2, '0');
+    let hours = mil.getHours();
+    let meridiem = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return {
+        date: `${mil.getMonth() + 1}/${mil.getDate()}/${mil.getFullYear().toString().substring(2,4)}`,
+        time: `${pad(hours)}:${pad(mil.getMinutes())}:${pad(mil.getSeconds())}${meridiem}`
+    };
 }
 
-function msToTime(ms)
-{
-    var days = 0;
-    var hours = 0;
-    var minutes = 0;
-    var ret = '';
-    while(ms > 0)
-    {
-        while(ms >= 86400000)
-        {
-            days += 1;
-            ms -= 86400000;
-        }
-        while(ms >= 3600000)
-        {
-            hours += 1;
-            ms -= 3600000;
-        }
-        while(ms >= 60000)
-        {
-            minutes += 1;
-            ms -= 60000;
-        }
-        if(days > 0)
-        {
-            ret += days + 'd ';
-        }
-        if(hours > 0)
-        {
-            ret += hours + 'h ';
-        }
-        ret += minutes + 'm';
-        return ret;
-    }
+
+function msToTime(ms) {
+    return `${Math.floor(ms / 86400000)}d ${Math.floor((ms % 86400000) / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }
 
-function lengthToTime(length)
-{
-    var ret = '';
-    var time = length.split(':');
-    var hours = parseInt(time[0]);
-    var minutes = parseInt(time[1]);
-    var seconds = parseInt(time[2]);
-    var days = 0;
-    if(hours >= 24)
-    {
-        while(hours >= 24)
-        {
-            days += 1;
-            hours -= 24;
-        }
-    }
-    if(days > 0)
-    {
-        ret += days + 'd ';
-    }
-    if(hours > 0)
-    {
-        ret += hours + 'h ';
-    }
-    if(minutes > 0)
-    {
-        if(seconds >= 30)
-        {
-            minutes += 1;
-        }
-        ret += minutes + 'm';
-    }
-    else
-    {
-        ret += seconds + 's';
-    }
-    return ret;
+function lengthToTime(length) {
+    var [hours, minutes, seconds] = length.split(':').map(Number);
+    var days = Math.floor(hours / 24);
+    hours %= 24;
+    minutes += seconds >= 30 ? 1 : 0;
+    return `${days > 0 ? days + 'd ' : ''}${hours > 0 ? hours + 'h ' : ''}${minutes > 0 ? minutes + 'm' : seconds + 's'}`;
 }

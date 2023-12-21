@@ -98,7 +98,7 @@ input {
     user-select: none;
 }
 
-.index-window {
+.index-window, .login-window, .admin-channel-select-window {
     width:300px !important;
 }
 
@@ -1388,11 +1388,13 @@ tr:nth-child(even) {
     float:left;
     height:32px;
     opacity:75%;
-    /* transition:0.25s ease-out all; */
 }
 
 #mainLogo:hover {
     opacity:100%;
     cursor:pointer;
-    /* transition:0.25s ease-in all; */
+}
+
+#admin {
+    display:none;
 }

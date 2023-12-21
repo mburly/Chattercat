@@ -1,7 +1,3 @@
-if(document.cookie == "") {
-    window.location.replace("index.html");
-}
-
 var state = "main";
 var _name = "";
 var _usage = "";
@@ -10,17 +6,27 @@ var _path = "";
 var _dateAdded = "";
 
 window.onload = function() {
-    startTime();
-    loadStatus();
-    loadAdmins();
-	loadMainData();
-    loadTools();
-    init();
+    if(document.cookie == "") {
+        window.location.replace("index.html");
+    }
+    else {
+        document.getElementById('admin').style.display = 'block';
+        startTime();
+        loadStatus();
+        loadAdmins();
+        loadMainData();
+        loadTools();
+        init();
+        listeners();
+        setInterval(function(){
+            loadMainData()
+        },5000);
+    }
 };
-listeners();
-setInterval(function(){
-    loadMainData()
-},5000);
+// listeners();
+// setInterval(function(){
+//     loadMainData()
+// },5000);
 // on focus, set window_focus = true.
 $(window).focus(function() {
     window_focus = true;
@@ -62,7 +68,7 @@ class Counter {
 }
 
 function init() {
-    $.get("php/validate.php", function(data, status) {
+    $.get("php/validate.php", function(data) {
         var data = JSON.parse(data);
         if(data["error"] == "invalid token" || data["error"] == "token expired") {
             document.cookie = "cc_admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -78,7 +84,7 @@ function init() {
 }
 
 function callAdmin() {
-    $.get("php/admin.php", function(data, status) {
+    $.get("php/admin.php", function(data) {
         var data = JSON.parse(data);
         if(data["executeStart"] == "") {
             $('#runtime').text('offline');
@@ -98,7 +104,7 @@ function callAdmin() {
 }
 
 function callChannels() {
-    $.get("php/channels.php", function(data, status) {
+    $.get("php/channels.php", function(data) {
         var data = JSON.parse(data);
         $('#streamsListTooltip').append('<strong>streams.txt</strong><ul>');
         for(let i = 0; i < data["streams"].length; i++) {
@@ -154,7 +160,7 @@ function listeners() {
 
     $('body').on('click', '#adminManageEmotesButton', function() {
         if(state != "manageEmotesChannelSelect") {
-            $.get("php/streams.php", function(data, status) {
+            $.get("php/streams.php", function(data) {
                 var data = JSON.parse(data);
                 if(state == "adminContent") {
                     hide(state);
@@ -162,7 +168,7 @@ function listeners() {
                 else {
                     remove(state);
                 }
-                $('#main').append('<div class="window" id="manageEmotesChannelSelect"><div class="title-bar window-blue"><div class="title-bar-text">Manage emotes - select a channel</div></div><div class="window-body"><ul class="admin-channel-list"></ul></div></div>');
+                $('#main').append('<div class="window admin-channel-select-window" id="manageEmotesChannelSelect"><div class="title-bar window-blue"><div class="title-bar-text">Manage emotes - select a channel</div></div><div class="window-body"><ul class="admin-channel-list"></ul></div></div>');
                 for(let i = 0; i < data["channels"].length; i++) {
                     $('.admin-channel-list').append('<li class="channel"><span class="channel-select" id="' + data["channels"][i] + '-channelSelect"><img class="channel-icon" src="' + data["pictures"][i] + '"><span class="channel-name">' + data["channels"][i] + '</span></span></li>')
                 }
@@ -413,7 +419,7 @@ function listeners() {
 }
 
 function loadMainData() {
-    $.get("php/validate.php", function(data, status) {
+    $.get("php/validate.php", function(data) {
         var data = JSON.parse(data);
         if(data["error"] == "invalid token" || data["error"] == "token expired") {
             document.cookie = "cc_admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -421,7 +427,7 @@ function loadMainData() {
         }
         else
         {
-            $.get("php/admin.php", function(data, status) {
+            $.get("php/admin.php", function(data) {
                 var data = JSON.parse(data);
                 $('.username').text(data["username"]);
                 $('#emotesLogged').text(data["numEmotes"].toLocaleString("en-US"));
@@ -437,7 +443,7 @@ function loadMainData() {
 }
 
 function loadAdmins() {
-    $.get("php/admins.php", function(data, status){
+    $.get("php/admins.php", function(data){
         var data = JSON.parse(data);
         for(let i = 0; i < data["usernames"].length; i++) {
             if(data["roles"][i] == 1) {
@@ -452,7 +458,7 @@ function loadAdmins() {
 }
 
 function loadStatus() {
-    $.get("php/status.php", function(data, status) {
+    $.get("php/status.php", function(data) {
         var data = JSON.parse(data);
         if(data["status"] == "online") {
             remove("statusLoader");
@@ -538,6 +544,6 @@ function startTime() {
   }
   
 function checkTime(i) {
-if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+if (i < 10) {i = "0" + i};
 return i;
 }
