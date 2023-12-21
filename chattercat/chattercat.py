@@ -35,53 +35,43 @@ class Chattercat:
         self.socketClock = time.time()
         try:
             while(self.running):
-                try:
-                    self.resp = ''
-                    if(utils.elapsedTime(self.liveClock) >= TIMERS['live']):
+                self.resp = ''
+                if(utils.elapsedTime(self.liveClock) >= TIMERS['live']):
+                    self.stream = twitch.getStreamInfo(self.channelName)
+                    if(self.stream is None):    # Try (check if live) one more time, since we are already running
                         self.stream = twitch.getStreamInfo(self.channelName)
-                        if(self.stream is None):    # Try (check if live) one more time, since we are already running
-                            self.stream = twitch.getStreamInfo(self.channelName)
-                        if(self.stream is not None):
-                            try:
-                                game_id = int(self.stream['game_id'])
-                            except:
-                                game_id = 0    # No game set
-                            if(self.db is None):
-                                utils.printInfo(self.channelName, f'DB is currently none [2]: {self.db}')
-                            if(self.db.gameId != game_id):
-                                self.db.addSegment(self.stream)
-                            self.liveClock = time.time()
-                        else:
-                            if(self.sock is not None):
-                                self.sock.close()
-                            self.running = False
-                            break
-                    if(utils.elapsedTime(self.socketClock) >= TIMERS['socket']):
-                        if(self.db is None):
-                            utils.printInfo(self.channelName, f'DB is currently none [3]: {self.db}')
-                        self.db.disconnect()
-                        self.db.connect()
-                        self.restartSocket()
-                    try:
-                        self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
-                        if(self.resp == ''):
-                            self.restartSocket()
-                    except KeyboardInterrupt:
-                        self.endExecution()
-                    except Exception as e:
-                        utils.printInfo(self.channelName, f'Something happened trying to decode the socket response. restarting socket: {e}\n')
-                        self.restartSocket()
-                    for resp in self.getResponses():
+                    if(self.stream is not None):
                         try:
-                            if(self.db is None):
-                                utils.printInfo(self.channelName, f'DB is currently none [4]: {self.db}')
-                            self.db.log(Response(self.channelName, resp))
-                        except Exception as e:
-                            utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
+                            game_id = int(self.stream['game_id'])
+                        except:
+                            game_id = 0    # No game set
+                        if(self.db.gameId != game_id):
+                            self.db.addSegment(self.stream)
+                        self.liveClock = time.time()
+                    else:
+                        if(self.sock is not None):
+                            self.sock.close()
+                        self.running = False
+                        break
+                if(utils.elapsedTime(self.socketClock) >= TIMERS['socket']):
+                    self.db.disconnect()
+                    self.db.connect()
+                    self.restartSocket()
+                try:
+                    self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
+                    if(self.resp == ''):
+                        self.restartSocket()
+                except KeyboardInterrupt:
+                    self.endExecution()
                 except Exception as e:
-                    utils.printInfo(self.channelName, f'WITHIN run() Exception: {e}, {type(e)}\n')
-        except Exception as e:
-            utils.printInfo(self.channelName, f'Exception [11]: {e}\n')
+                    utils.printInfo(self.channelName, f'Something happened trying to decode the socket response. restarting socket:\nEncountered exception: {e}\n\n')
+                    self.restartSocket()
+                for resp in self.getResponses():
+                    try:
+                        self.db.log(Response(self.channelName, resp))
+                    except Exception as e:
+                        utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
+        except:
             self.endExecution()
             utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
     
