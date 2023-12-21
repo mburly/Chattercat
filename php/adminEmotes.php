@@ -28,7 +28,7 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = 'SELECT * FROM emotes ORDER BY count DESC;';
+        $sql = 'SELECT * FROM Emotes ORDER BY Count DESC;';
         $result = $conn->query($sql);
         if($result->num_rows > 0) {
             $codes = '';
@@ -40,14 +40,14 @@
             $sources = '';
             $active = '';
             while($emote = $result->fetch_assoc()) {
-                $codes .= '"' . addcslashes($emote["code"], '"\\/') . '",';
-                $counts .= $emote["count"] . ',';
-                $emote_ids .= '"' . addcslashes($emote["emote_id"], '"\\/') . '",';
-                $urls .= '"' . $emote["url"] . '",';
-                $paths .= '"' . $emote["path"] . '",';
-                $dates .= '"' . $emote["date_added"] . '",';
-                $sources .= $emote["source"] . ',';
-                $active .= $emote["active"] . ',';
+                $codes .= '"' . addcslashes($emote["Code"], '"\\/') . '",';
+                $counts .= $emote["Count"] . ',';
+                $emote_ids .= '"' . addcslashes($emote["EmoteID"], '"\\/') . '",';
+                $urls .= '"' . $emote["URL"] . '",';
+                $paths .= '"' . $emote["Path"] . '",';
+                $dates .= '"' . $emote["Added"] . '",';
+                $sources .= $emote["Source"] . ',';
+                $active .= $emote["Active"] . ',';
             }
             $codes = substr($codes, 0, -1);
             $counts = substr($counts, 0, -1);

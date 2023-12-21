@@ -95,9 +95,11 @@ function listeners() {
     });
     
     $('body').on('click','.channel-select',function(){
-        var id = $(this).attr('id').split('-')[0];
-        loadChannelPage(id);
-        state = "statsPage";
+        if(state != "statsPage") {
+            var id = $(this).attr('id').split('-')[0];
+            loadChannelPage(id);
+            state = "statsPage";
+        }
     });
     
     $('body').on('click','#mainExpandButton',function(){
@@ -199,7 +201,11 @@ function listeners() {
                 else if(data["sources"][i] == 5 || data["sources"][i] == 6) {
                     source = "BTTV";
                 }
-                $('.channel-emotes').append('<li class="channel-emotes-list-emote"><div class="channel-emote-holder"><div class="tooltip-top"><img class="channel-emote channel-emote-image" src="' + data["paths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"]["i"] + '-tooltip" src="' + data["paths"][i] + '"></span></div><span class="channel-emote-name" title="' + data["codes"][i] + '">' + data["codes"][i] + '</span><span class="channel-emote-type ' + source + '-emote" style="margin-top:5px;">' + source + '</span></div></li>');
+                else if(data["sources"][i] == 7 || data["sources"][i] == 8) {
+                    source = "7TV";
+                }
+                var sourceClass = source == "7TV" ? "_7TV" : source;
+                $('.channel-emotes').append('<li class="channel-emotes-list-emote"><div class="channel-emote-holder"><div class="tooltip-top"><img class="channel-emote channel-emote-image" src="' + data["paths"][i] + '" onerror="placeholder(this)"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["codes"]["i"] + '-tooltip" src="' + data["paths"][i] + '"></span></div><span class="channel-emote-name" title="' + data["codes"][i] + '">' + data["codes"][i] + '</span><span class="channel-emote-type ' + sourceClass + '-emote" style="margin-top:5px;">' + source + '</span></div></li>');
             }
             state = "channelEmotes";
         });
@@ -239,7 +245,7 @@ function loadChannelPage(id)
                         }
                         var date = log_data[id]["datetime"].split(' ')[0].split('-');
                         date = date[1].replace('0','') + '/' + date[2].replace('0','') + '/' + date[0];
-                        if(i == 0) {
+                        if(i == 0 || i == 1) {
                             if(log_data[id]["type"] == "disabled") {
                                 $('.emote-log').append('<li class="log-item"><span class="badge log-date">' + date +'</span><img class="channel-icon log-icon" src="pictures/' + channel + '.png"><span class="channel-name log-channel-name">' + channel + '</span><span class="log-type text-disabled">disabled</span><div class="tooltip-bottom"><img class="emote log-emote" src="' + log_data[id]["path"] +'"><span class="tooltiptext"><img class="emote-tooltip" id="' + log_data[id]["path"] + '-tooltip" src="' + log_data[id]["path"] + '"></span></div><span class="emote-name log-emote-name">' + log_data[id]["emote"] +'</span></li>');
                             }
@@ -335,7 +341,11 @@ function loadChannelPage(id)
                     else if(data["topEmoteSources"][i] == 5 || data["topEmoteSources"][i] == 6) {
                         source = "BTTV";
                     }
-                    $('#topEmotesList').append('<li class="emote-item"><span class="emote-source ' + source + '-emote">' + source + '</span><div class="tooltip-top"><img class="emote" src="' + data["topEmotePaths"][i] + '"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["topEmoteCodes"][i] + '-tooltip" src="' + data["topEmotePaths"][i] + '"></span></div><div class="emote-name-section"><span class="emote-name">' + data["topEmoteCodes"][i] + '</span></div><span class="emote-count">' + data["topEmoteCounts"][i].toLocaleString("en-US") + '</span></li>');
+                    else if(data["topEmoteSources"][i] == 7 || data["topEmoteSources"][i] == 8) {
+                        source = "7TV";
+                    }
+                    var sourceClass = source == "7TV" ? "_7TV" : source;
+                    $('#topEmotesList').append('<li class="emote-item"><span class="emote-source ' + sourceClass + '-emote">' + source + '</span><div class="tooltip-top"><img class="emote" src="' + data["topEmotePaths"][i] + '" onerror="placeholder(this)"><span class="tooltiptext"><img class="emote-tooltip" id="' + data["topEmoteCodes"][i] + '-tooltip" src="' + data["topEmotePaths"][i] + '"></span></div><div class="emote-name-section"><span class="emote-name">' + data["topEmoteCodes"][i] + '</span></div><span class="emote-count">' + data["topEmoteCounts"][i].toLocaleString("en-US") + '</span></li>');
                 }
                 $('#emotesWindowBody').append('<button class="channel-emotes-button" id="' + channel + '-ChannelEmotesButton">View ' + channel + '\'s emotes</button>');
                 $('#emotesStatusBar').append('<p class="status-bar-field"><span class="status-bar-right">Total emotes: ' + data["totalEmotes"].toLocaleString("en-US") + '</span></p>');
@@ -465,6 +475,12 @@ function generateChannelPage(channel)
 {
     state = "statsPage";
     document.body.innerHTML += '<div class="window-group" id="statsPage"><div class="window window-group-member"><div class="title-bar"><div class="title-bar-text" id="chattersTitleBarText"><i class="fas fa-cat-space"></i></div></div><div class="window-body" id="chattersWindowBody"><div class="load" id="chattersLoad"><span class="loader"></span></div></div><div class="status-bar" id="chattersStatusBar"></div></div><div class="window window-group-member"><div class="title-bar member-2"><div class="title-bar-text" id="emotesTitleBarText"><i class="fas fa-cat-space"></i></div></div><div class="window-body" id="emotesWindowBody"><div class="load" id="emotesLoad"><span class="loader"></span></div></div><div class="status-bar" id="emotesStatusBar"></div></div><div class="window window-group-member"><div class="title-bar member-3"><div class="title-bar-text" id="messagesTitleBarText"><i class="fas fa-cat-space"></i></div></div><div class="window-body" id="messagesWindowBody"><div class="load"><span class="loader" id="messagesLoad"></span></div></div><div class="status-bar" id="messagesStatusBar"></div></div><div class="window window-group-member"><div class="title-bar member-4"><div class="title-bar-text" id="sessionsTitleBarText"><i class="fas fa-cat-space"></i></div></div><div class="window-body" id="sessionsWindowBody"><div class="load" id="sessionsLoad"><span class="loader"></span></div></div></div><div class="window-group"><div class="window-group-member" id="updates"><div class="window" id="updatesPanel"><div class="title-bar"><div class="title-bar-text"><i class="fas fa-cat-space"></i>' + channel + ' - Emote Update Log</div></div><div class="window-body"><ul class="emote-log"></ul></div></div></div></div></div>';
+}
+
+function placeholder(image) {
+    image.onerror = "";
+    image.src = "images/placeholder.png";
+    return true;
 }
 
 // 

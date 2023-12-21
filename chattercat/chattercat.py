@@ -7,12 +7,13 @@ import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
 
+
 class Chattercat:
     executing = True
     running = True
-    def __init__(self, channel_name):
-        self.channel_name = channel_name.lower()
-        self.stream = twitch.getStreamInfo(self.channel_name)
+    def __init__(self, channelName):
+        self.channelName = channelName.lower()
+        self.stream = twitch.getStreamInfo(self.channelName)
         try:
             while(self.executing):
                 if(self.stream is not None):
@@ -21,8 +22,8 @@ class Chattercat:
                         self.run()
                     self.end()
                 else:
-                    self.stream = twitch.getStreamInfo(self.channel_name)
-                    if self.stream is None:
+                    self.stream = twitch.getStreamInfo(self.channelName)
+                    if(self.stream is None):
                         time.sleep(TIMERS['sleep'])
         except KeyboardInterrupt:
             return None
@@ -30,64 +31,79 @@ class Chattercat:
     def run(self):
         self.db.getChannelActiveEmotes()
         self.startSocket()
-        self.live_clock = time.time()
-        self.socket_clock = time.time()
+        self.liveClock = time.time()
+        self.socketClock = time.time()
         try:
             while(self.running):
-                self.resp = ''
-                if(utils.elapsedTime(self.live_clock) >= TIMERS['live']):
-                    self.stream = twitch.getStreamInfo(self.channel_name)
-                    if(self.stream is None):    # Try (check if live) one more time, since we are already running
-                        self.stream = twitch.getStreamInfo(self.channel_name)
-                    if(self.stream is not None):
-                        try:
-                            game_id = int(self.stream['game_id'])
-                        except:
-                            game_id = 0    # No game set
-                        if(self.db.gameId != game_id):
-                            self.db.addSegment(self.stream)
-                        self.live_clock = time.time()
-                    else:
-                        if(self.sock is not None):
-                            self.sock.close()
-                        self.running = False
-                if(utils.elapsedTime(self.socket_clock) >= TIMERS['socket']):
-                    self.db.disconnect()
-                    self.db.connect()
-                    self.restartSocket()
                 try:
-                    self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
-                    if self.resp == '' :
+                    self.resp = ''
+                    if(utils.elapsedTime(self.liveClock) >= TIMERS['live']):
+                        self.stream = twitch.getStreamInfo(self.channelName)
+                        if(self.stream is None):    # Try (check if live) one more time, since we are already running
+                            self.stream = twitch.getStreamInfo(self.channelName)
+                        if(self.stream is not None):
+                            try:
+                                game_id = int(self.stream['game_id'])
+                            except:
+                                game_id = 0    # No game set
+                            if(self.db is None):
+                                utils.printInfo(self.channelName, f'DB is currently none [2]: {self.db}')
+                            if(self.db.gameId != game_id):
+                                self.db.addSegment(self.stream)
+                            self.liveClock = time.time()
+                        else:
+                            if(self.sock is not None):
+                                self.sock.close()
+                            self.running = False
+                            break
+                    if(utils.elapsedTime(self.socketClock) >= TIMERS['socket']):
+                        if(self.db is None):
+                            utils.printInfo(self.channelName, f'DB is currently none [3]: {self.db}')
+                        self.db.disconnect()
+                        self.db.connect()
                         self.restartSocket()
-                except KeyboardInterrupt:
-                    self.endExecution()
-                except:
-                    self.restartSocket()
-                for resp in self.getResponses():
-                    self.db.log(Response(self.channel_name, resp))
-        except:
+                    try:
+                        self.resp = self.sock.recv(2048).decode('utf-8', errors='ignore')
+                        if(self.resp == ''):
+                            self.restartSocket()
+                    except KeyboardInterrupt:
+                        self.endExecution()
+                    except Exception as e:
+                        utils.printInfo(self.channelName, f'Something happened trying to decode the socket response. restarting socket: {e}\n')
+                        self.restartSocket()
+                    for resp in self.getResponses():
+                        try:
+                            if(self.db is None):
+                                utils.printInfo(self.channelName, f'DB is currently none [4]: {self.db}')
+                            self.db.log(Response(self.channelName, resp))
+                        except Exception as e:
+                            utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
+                except Exception as e:
+                    utils.printInfo(self.channelName, f'WITHIN run() Exception: {e}, {type(e)}\n')
+        except Exception as e:
+            utils.printInfo(self.channelName, f'Exception [11]: {e}\n')
             self.endExecution()
-            utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name))
+            utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
     
     def start(self):
+        utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
         try:
-            utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name))
-            self.db = Database(self.channel_name)
-            if(self.db.startSession(self.stream) is None):
-                return None
-            self.running = True
+            self.db = Database(self.channelName)
         except:
             return None
+        if(self.db.startSession(self.stream) is None):
+            return None
+        self.running = True
 
     def end(self):
         self.db.endSession()
         self.db.disconnect()
-        self.live = False
-        utils.printInfo(self.channel_name, utils.statusMessage(self.channel_name, online=False))
+        self.running = False
+        utils.printInfo(self.channelName, utils.statusMessage(self.channelName, online=False))
 
     def endExecution(self):
         if(self.sock is not None):
-                self.sock.close()
+            self.sock.close()
         self.db.endSession()
         self.db.disconnect()
         self.running = False
@@ -99,16 +115,16 @@ class Chattercat:
             self.sock.connect(ADDRESS)
             self.sock.send(f'PASS {self.db.config.token}\n'.encode('utf-8'))
             self.sock.send(f'NICK {self.db.config.nickname}\n'.encode('utf-8'))
-            self.sock.send(f'JOIN #{self.channel_name}\n'.encode('utf-8'))
+            self.sock.send(f'JOIN #{self.channelName}\n'.encode('utf-8'))
         except:
-            utils.printError(self.channel_name, ERROR_MESSAGES['host'])
+            utils.printError(self.channelName, ERROR_MESSAGES['host'])
             self.db.endSession()
             return None
 
     def restartSocket(self):
         if(self.sock is not None):
             self.sock.close()
-        self.socket_clock = time.time()
+        self.socketClock = time.time()
         self.startSocket()
 
     def getResponses(self):

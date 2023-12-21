@@ -2,37 +2,40 @@ import os
 
 import mysql.connector
 
-import chattercat.constants as constants
+from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, STATUS_MESSAGES
 import chattercat.twitch as twitch
-from chattercat.utils import Config
+from chattercat.utils import Config, Response
 import chattercat.utils as utils
 
-ERROR_MESSAGES = constants.ERROR_MESSAGES
-STATUS_MESSAGES = constants.STATUS_MESSAGES
-DIRS = constants.DIRS
-EMOTE_TYPES = constants.EMOTE_TYPES
 
 class Database:
     def __init__(self, channelName):
-        self.config = Config()
         self.channelDbName = f'cc_{channelName}'
         self.channelName = channelName
+        self.config = Config()
         self.connect()
-        if self.db is None:
-            self.createChannelDb()
-            self.connect()
 
     def commit(self, sql):
         try:
+            if(not self.db.is_connected()):
+                self.connect()
             if(isinstance(sql, list)):
                 for stmt in sql:
-                    self.cursor.execute(stmt)
+                    try:
+                        self.cursor.execute(stmt)
+                    except Exception as e:
+                        utils.printError(self.channelName, e)
+                        return None
                 self.db.commit()
             else:
-                self.cursor.execute(sql)
+                try:
+                    self.cursor.execute(sql)
+                except Exception as e:
+                    utils.printError(self.channelName, e)
+                    return None
                 self.db.commit()
-        except Exception as e:
-            print(f'{self.channelName} {e}')
+        except:
+            return None
 
     def connect(self, dbName=None):
         try:
@@ -45,60 +48,35 @@ class Database:
             self.cursor = self.db.cursor()
         except:
             self.db = None
+            if(dbName is None):
+                self.createChannelDb()
+                self.connect()
 
     def disconnect(self):
-        if self.cursor is None:
+        if(self.cursor is not None):
             self.cursor.close()
-        if self.db is None:
+        if(self.db is not None):
             self.db.close()
-
+            
     def createChannelDb(self):
         db = connect()
+        if(db is None):
+            return None
         cursor = db.cursor()
-        cursor.execute(self.stmtCreateDatabase())
+        try:
+            cursor.execute(self.stmtCreateDatabase())
+        except:
+            return None
         cursor.close()
         db.close()
         self.connect()
-        self.commit([self.stmtCreateChattersTable(),self.stmtCreateSessionsTable(),self.stmtCreateGamesTable(),self.stmtCreateSegmentsTable(),
-                     self.stmtCreateMessagesTable(),self.stmtCreateEmotesTable(),self.stmtCreateLogsTable(),self.stmtCreateTopEmotesProcedure(),
-                     self.stmtCreateTopChattersProcedure(),self.stmtCreateRecentSessionsProcedure()])
+        self.commit(self.setupDb())
         try:
             self.commit(self.stmtCreateEmoteStatusChangeTrigger())
         except:
             pass
         self.populateEmotesTable()
         self.downloadEmotes()
-
-    # def createDb(self):
-        # try:
-            # self.connectHelper()
-            # self.cursor.execute(stmtCreateDatabase(self.channel_name))
-            # self.cursor.close()
-            # self.db.close()
-            # self.connect()
-            # self.cursor.execute(stmtCreateChattersTable())
-            # self.cursor.execute(stmtCreateSessionsTable())
-            # self.cursor.execute(stmtCreateGamesTable())
-            # self.cursor.execute(stmtCreateSegmentsTable())
-            # self.cursor.execute(stmtCreateMessagesTable())
-            # self.cursor.execute(stmtCreateEmotesTable())
-            # self.cursor.execute(stmtCreateLogsTable())
-            # self.cursor.execute(stmtCreateTopEmotesProcedure(self.channel_name))
-            # self.cursor.execute(stmtCreateTopChattersProcedure(self.channel_name))
-            # self.cursor.execute(stmtCreateRecentSessionsProcedure(self.channel_name))
-
-
-            # 
-            #   CHECK THIS CODE DID NOT ADD TO NEW METHOD
-            # 
-            # try:
-            #     self.cursor.execute(stmtCreateEmoteStatusChangeTrigger())
-            # except:
-            #     pass
-        # except:
-        #     self.cursor.close()
-        #     self.db.close()
-        #     return None
 
     def startSession(self, stream):
         self.commit(self.stmtInsertNewSession())
@@ -110,49 +88,61 @@ class Database:
     def endSession(self):
         self.commit([self.stmtUpdateSessionEndDatetime(),self.stmtUpdateSessionLength(),self.stmtUpdateSegmentEndDatetime(),self.stmtUpdateSegmentLength()])
 
-    def log(self, resp):
-        if(resp is None or resp.username is None or resp.message is None or resp.username == '' or ' ' in resp.username):
+    def log(self, resp: Response):
+        if(resp is None):
             return None
-        self.logMessage(self.getChatterId(resp.username), resp.message)
-        self.logMessageEmotes(resp.message)
+        if(resp.username is None or resp.message is None or resp.username == '' or ' ' in resp.username):
+            return None
+        try:
+            self.logMessage(self.getChatterId(resp.username), resp.message)
+            self.logMessageEmotes(resp.message)
+        except:
+            return None
 
     def logChatter(self, username):
         self.commit(self.stmtInsertNewChatter(username))
         return self.cursor.lastrowid
 
-    def logEmote(self, emote, channel_id):
-        source_name = emote.split('-')[0]
+    def logEmote(self, emote, channelId):
+        sourceName = emote.split('-')[0]
         id = emote.split('-')[1]
-        source = EMOTE_TYPES.index(source_name)+1
-        emote = twitch.getEmoteById(channel_id, id, source)
+        source = EMOTE_TYPES.index(sourceName)+1
+        emote = twitch.getEmoteById(channelId, id, source)
         if(emote is None):
             return None
         if('\\' in emote.code):
             emote.code = emote.code.replace('\\', '\\\\')
         self.commit(self.stmtInsertNewEmote(emote, source))
 
-    def logMessage(self, chatter_id, message):
-        if "\"" in message:
+    def logMessage(self, chatterId, message):
+        if("\"" in message):
             message = message.replace("\"", "\'")
-        if '\\' in message:
+        if('\\' in message):
             message = message.replace('\\', '\\\\')
-        self.commit([self.stmtInsertNewMessage(message, chatter_id),self.stmtUpdateChatterLastDate(chatter_id)])
+        if(len(message.split('ACTION :')) > 1):
+            message = message.replace('ACTION :', '').lstrip()
+            self.commit([self.stmtInsertNewMessage(message, 1, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
+        elif(len(message.split('ACTION')) > 1):
+            message = message.replace('ACTION', '').lstrip()
+            self.commit([self.stmtInsertNewMessage(message, 1, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
+        else:
+            self.commit([self.stmtInsertNewMessage(message, 0, chatterId),self.stmtUpdateChatterLastDate(chatterId)])
         
     def logMessageEmotes(self, message):
-        message_emotes = utils.parseMessageEmotes(self.channel_emotes, message)
-        for emote in message_emotes:
-            if '\\' in emote:
+        messageEmotes = utils.parseMessageEmotes(self.channelEmotes, message)
+        for emote in messageEmotes:
+            if('\\' in emote):
                 emote = emote.replace('\\','\\\\')
             self.commit(self.stmtUpdateEmoteCount(emote))
 
     def populateEmotesTable(self):
         emotes = twitch.getAllChannelEmotes(self.channelName)
         source = 1
-        for emote_type in EMOTE_TYPES:
-            if(emotes[emote_type] is None):         # No emotes from source found
+        for emoteType in EMOTE_TYPES:
+            if(emotes[emoteType] is None):         # No emotes from source found
                 source += 1
                 continue
-            for emote in emotes[emote_type]:
+            for emote in emotes[emoteType]:
                 if '\\' in emote.code:
                     emote.code = emote.code.replace('\\', '\\\\')
                 self.commit(self.stmtInsertNewEmote(emote, source))
@@ -160,76 +150,80 @@ class Database:
 
     def update(self):
         utils.printInfo(self.channelName, STATUS_MESSAGES['updates'])
-        new_emote_count = 0
+        newEmoteCount = 0
         self.channel = twitch.getChannelInfo(self.channelName)
-        self.channel_id = twitch.getChannelId(self.channelName)
-        channel_emotes = twitch.getAllChannelEmotes(self.channelName)
-        current_emotes = self.getEmotes(channel_emotes=channel_emotes)
-        previous_emotes = self.getEmotes(active=1)
-        inactive_emotes = self.getEmotes(active=0)
-        A = set(current_emotes)
-        B = set(previous_emotes)
-        C = set(inactive_emotes)
-        new_emotes = A-B
-        removed_emotes = B-A
-        reactivated_emotes = A.intersection(C)
-        for emote in new_emotes:
-            if(emote in reactivated_emotes):
+        self.channelId = twitch.getChannelId(self.channelName)
+        channelEmotes = twitch.getAllChannelEmotes(self.channelName)
+        currentEmotes = self.getEmotes(channelEmotes=channelEmotes)
+        previousEmotes = self.getEmotes(active=1)
+        inactiveEmotes = self.getEmotes(active=0)
+        A = set(currentEmotes)
+        B = set(previousEmotes)
+        C = set(inactiveEmotes)
+        newEmotes = A-B
+        removedEmotes = B-A
+        reactivatedEmotes = A.intersection(C)
+        for emote in newEmotes:
+            if(emote in reactivatedEmotes):
                 continue
-            self.logEmote(emote, self.channel_id)
-            new_emote_count += 1
-        self.setEmotesStatus(removed_emotes, 0)
-        self.setEmotesStatus(reactivated_emotes, 1)
-        if(new_emote_count > 0):
+            self.logEmote(emote, self.channelId)
+            newEmoteCount += 1
+        self.setEmotesStatus(removedEmotes, 0)
+        self.setEmotesStatus(reactivatedEmotes, 1)
+        if(newEmoteCount > 0):
             self.downloadEmotes()
-            utils.printInfo(self.channelName, utils.downloadMessage(new_emote_count))
+            utils.printInfo(self.channelName, f'Added {newEmoteCount} new emotes.')
         self.updateChannelPicture()
         utils.printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
 
-    def downloadEmotesHelper(self):
+    def downloadEmotes(self):
         utils.printInfo(self.channelName, STATUS_MESSAGES['downloading'])
-        self.cursor.execute(self.stmtSelectEmotesToDownload())
+        for dir in DIRS.values():
+            if(not os.path.exists(dir)):
+                os.mkdir(dir)
+        try:
+            self.cursor.execute(self.stmtSelectEmotesToDownload())
+        except:
+            return None
         for row in self.cursor.fetchall():
             url = row[0]
-            emote_id = row[1]
-            emote_name = utils.removeSymbolsFromName(row[2])
+            emoteId = row[1]
+            emoteName = utils.removeSymbolsFromName(row[2])
             source = int(row[3])
             if(source == 1 or source == 2):
                 if('animated' in url):
                     extension = 'gif'
                 else:
                     extension = 'png'
-                path = f'{DIRS["twitch"]}/{emote_name}-{emote_id}.{extension}'
-                download_path = f'{DIRS["twitch"]}/{emote_name}-{emote_id}.{extension}'
+                path = f'{DIRS["twitch"]}/{emoteName}-{emoteId}.{extension}'
             elif(source == 3 or source == 4):
                 extension = 'png'
-                path = f'{DIRS["ffz"]}/{emote_name}-{emote_id}.{extension}'
-                download_path = f'{DIRS["ffz"]}/{emote_name}-{emote_id}.{extension}'
+                path = f'{DIRS["ffz"]}/{emoteName}-{emoteId}.{extension}'
             elif(source == 5 or source == 6):
                 extension = url.split('.')[3]
                 url = url.split(f'.{extension}')[0]
-                path = f'{DIRS["bttv"]}/{emote_name}-{emote_id}.{extension}'
-                download_path = f'{DIRS["bttv"]}/{emote_name}-{emote_id}.{extension}'
-            self.commit(self.stmtUpdateEmotePath(path, emote_id, source))
-            utils.downloadFile(url, download_path)
-
-    def downloadEmotes(self):
-        for dir in DIRS.values():
-            if not os.path.exists(dir):
-                os.mkdir(dir)
-        self.downloadEmotesHelper()
+                path = f'{DIRS["bttv"]}/{emoteName}-{emoteId}.{extension}'
+            elif(source == 7 or source == 8):
+                path = f'{DIRS["7tv"]}/{emoteName}-{emoteId}.webp'
+            self.commit(self.stmtUpdateEmotePath(path, emoteId, source))
+            utils.downloadFile(url, path)
 
     def getChannelActiveEmotes(self):
-        emotes = []
+        self.channelEmotes = []
         self.update()
-        self.cursor.execute(self.stmtSelectActiveEmotes())
+        try:
+            self.cursor.execute(self.stmtSelectActiveEmotes())
+        except:
+            return None
         for emote in self.cursor.fetchall():
-            emotes.append(str(emote[0]))
-        self.channel_emotes = emotes
+            self.channelEmotes.append(str(emote[0]))
 
     def getChatterId(self, username):
         id = None
-        self.cursor.execute(self.stmtSelectChatterIdByUsername(username))
+        try:
+            self.cursor.execute(self.stmtSelectChatterIdByUsername(username))
+        except:
+            return None
         for row in self.cursor:
             id = row[0]
             return id
@@ -237,19 +231,22 @@ class Database:
         return id
 
     # Returns in format: <source>-<emote_id>
-    def getEmotes(self, active=None, channel_emotes=None):
+    def getEmotes(self, active=None, channelEmotes=None):
         emotes = []
-        if(channel_emotes is not None):
+        if(channelEmotes is not None):
             for source in EMOTE_TYPES:
-                if(channel_emotes[source] is None):
+                if(channelEmotes[source] is None):
                     continue
                 else:
-                    for emote in channel_emotes[source]:
+                    for emote in channelEmotes[source]:
                         emotes.append(f'{source}-{emote.id}')
             return emotes
         else:
             emotes = []
-            self.cursor.execute(self.stmtSelectEmoteByStatus(active))
+            try:
+                self.cursor.execute(self.stmtSelectEmoteByStatus(active))
+            except:
+                return None
             for row in self.cursor.fetchall():
                 source = int(row[1])
                 emotes.append(f'{EMOTE_TYPES[source-1]}-{row[0]}')
@@ -268,7 +265,10 @@ class Database:
         except:
             self.gameId = 0
         self.gameName = stream['game_name']
-        self.cursor.execute(self.stmtSelectGameById())
+        try:
+            self.cursor.execute(self.stmtSelectGameById())
+        except:
+            return None
         if(len(self.cursor.fetchall()) == 0):
             self.commit(self.stmtInsertNewGame())
         self.segment += 1
@@ -276,22 +276,44 @@ class Database:
         self.commit(self.stmtInsertNewSegment())
         self.segmentId = self.cursor.lastrowid
 
+    def setupDb(self):
+        return [self.stmtCreateChattersTable(), self.stmtCreateSessionsTable(), self.stmtCreateGamesTable(), self.stmtCreateSegmentsTable(),
+                self.stmtCreateMessagesTable(), self.stmtCreateEmotesTable(), self.stmtCreateEmoteLogsTable(), self.stmtCreateRecentSessionsView(),
+                self.stmtCreateTopChattersView(), self.stmtCreateTopEmotesView(), self.stmtCreateRecentSegmentsView(),
+                self.stmtCreateRecentMessagesView(), self.stmtCreateRecentChattersView()]
+
     def updateChannelPicture(self):
-        db = connect("cc_housekeeping")
+        db = connect(ADMIN_DB_NAME)
+        if(db is None):
+            return None
         cursor = db.cursor(buffered=True)
-        cursor.execute(self.stmtSelectProfilePictureUrl())
+        if(cursor is None):
+            return None
+        try:
+            cursor.execute(self.stmtSelectProfilePictureUrl())
+        except:
+            return None
         if(cursor.rowcount == 0):
-            cursor.execute(self.stmtInsertNewPicture())
-            db.commit()
+            try:
+                cursor.execute(self.stmtInsertNewPicture())
+                db.commit()
+            except:
+                return None
             utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
         else:
-            for url in cursor.fetchall():
-                profile_image_url = url[0]
-                if(self.channel['profile_image_url'] != profile_image_url):
-                    cursor.execute(self.stmtInsertNewPicture())
-                    db.commit()
-                    os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
-                    utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            try:
+                for url in cursor.fetchall():
+                    profileImageUrl = url[0]
+                    if(self.channel['profile_image_url'] != profileImageUrl):
+                        try:
+                            cursor.execute(self.stmtInsertNewPicture())
+                        except:
+                            return None
+                        db.commit()
+                        os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
+                        utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            except:
+                return None
         cursor.close()
         db.close()
         
@@ -299,125 +321,142 @@ class Database:
         return f'CREATE DATABASE IF NOT EXISTS cc_{self.channelName} COLLATE utf8mb4_general_ci;'
 
     def stmtCreateChattersTable(self):
-        return f'CREATE TABLE chatters (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(512), first_date DATE, last_date DATE) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Chatters (ChatterID INT AUTO_INCREMENT PRIMARY KEY, Username VARCHAR(512), FirstSeen DATE, LastSeen DATE) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateSessionsTable(self):
-        return f'CREATE TABLE sessions (id INT AUTO_INCREMENT PRIMARY KEY, start_datetime DATETIME, end_datetime DATETIME, length TIME) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Sessions (SessionID INT AUTO_INCREMENT PRIMARY KEY, Start DATETIME, End DATETIME, Length TIME) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateMessagesTable(self):
-        return  f'CREATE TABLE messages (id INT AUTO_INCREMENT PRIMARY KEY, message VARCHAR(512) COLLATE utf8mb4_general_ci, session_id INT, segment_id INT, chatter_id INT, datetime DATETIME, FOREIGN KEY (session_id) REFERENCES sessions(id), FOREIGN KEY (segment_id) REFERENCES segments(id), FOREIGN KEY (chatter_id) REFERENCES chatters(id)) COLLATE utf8mb4_general_ci;'
+        return  f'CREATE TABLE Messages (MessageID INT AUTO_INCREMENT PRIMARY KEY, Message VARCHAR(512) COLLATE utf8mb4_general_ci, Action BOOLEAN, ChatterID INT, SessionID INT, SegmentID INT, Timestamp DATETIME, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (SegmentID) REFERENCES Segments(SegmentID), FOREIGN KEY (ChatterID) REFERENCES Chatters(ChatterID)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateEmotesTable(self):
-        return f'CREATE TABLE emotes (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(255) COLLATE utf8mb4_general_ci, emote_id VARCHAR(255) COLLATE utf8mb4_general_ci, count INT DEFAULT 0, url VARCHAR(512) COLLATE utf8mb4_general_ci, path VARCHAR(512) COLLATE utf8mb4_general_ci, date_added DATE, source VARCHAR(255) COLLATE utf8mb4_general_ci, active BOOLEAN) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Emotes (EmoteID VARCHAR(255) COLLATE utf8mb4_general_ci, Code VARCHAR(255) COLLATE utf8mb4_general_ci, Count INT DEFAULT 0, URL VARCHAR(512) COLLATE utf8mb4_general_ci, Path VARCHAR(512) COLLATE utf8mb4_general_ci, Added DATE, Source INT, Active BOOLEAN, PRIMARY KEY(EmoteID, Source)) COLLATE utf8mb4_general_ci;'
 
-    def stmtCreateTopEmotesProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.topEmotes() BEGIN SELECT code, count, path FROM cc_{self.channelName}.EMOTES GROUP BY code ORDER BY count DESC LIMIT 10; END'
+    def stmtCreateTopEmotesView(self):
+        return f'CREATE VIEW TopEmotesView AS SELECT Code, Count, Path, Source FROM Emotes GROUP BY Code ORDER BY Count DESC LIMIT 10;'
 
-    def stmtCreateTopChattersProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.topChatters() BEGIN SELECT c.username, COUNT(m.id) FROM cc_{self.channelName}.MESSAGES m INNER JOIN cc_{self.channelName}.CHATTERS c ON m.chatter_id=c.id GROUP BY c.username ORDER BY COUNT(m.id) DESC LIMIT 10; END'
+    def stmtCreateTopChattersView(self):
+        return f'CREATE VIEW TopChattersView AS SELECT c.Username, COUNT(m.MessageID) AS MessageCount FROM Messages m INNER JOIN Chatters c ON m.ChatterID=c.ChatterID GROUP BY c.Username ORDER BY COUNT(m.MessageID) DESC LIMIT 5;'
 
-    def stmtCreateRecentSessionsProcedure(self):
-        return f'CREATE PROCEDURE cc_{self.channelName}.recentSessions() BEGIN SELECT id, (SELECT seg.stream_title FROM cc_{self.channelName}.sessions ses INNER JOIN cc_{self.channelName}.segments seg ON ses.id=seg.session_id ORDER BY seg.id DESC LIMIT 1), DATE_FORMAT(end_datetime, "%c/%e/%Y"), length FROM cc_{self.channelName}.sessions ORDER BY id DESC LIMIT 5; END'
+    def stmtCreateRecentChattersView(self):
+        return f'CREATE VIEW RecentChattersView AS SELECT DISTINCT (SELECT Username FROM Chatters c WHERE c.ChatterID = m.ChatterID) AS Username FROM Messages m GROUP BY MessageID ORDER BY MessageID DESC LIMIT 9;'
+    
+    def stmtCreateRecentMessagesView(self):
+        return f'CREATE VIEW RecentMessagesView AS SELECT (SELECT c.Username FROM Chatters c WHERE c.ChatterID = m.ChatterID) AS Username, Message, Timestamp FROM Messages m ORDER BY m.MessageID DESC LIMIT 20;'
 
-    def stmtCreateLogsTable(self):
-        return f'CREATE TABLE logs (id INT AUTO_INCREMENT PRIMARY KEY, emote_id INT, old INT, new INT, user_id VARCHAR(512), datetime DATETIME, FOREIGN KEY (emote_id) REFERENCES emotes(id)) COLLATE utf8mb4_general_ci;'
+    def stmtCreateRecentSegmentsView(self):
+        return f'CREATE VIEW RecentSegmentsView AS SELECT g.Name, s.Length, s.Title, s.SessionID FROM Games g INNER JOIN Segments s ON g.GameID=s.GameID WHERE s.SessionID IN (SELECT * FROM (SELECT SessionID FROM Sessions ORDER BY SessionID DESC) AS t) ORDER BY s.SegmentID DESC;'
+    
+    def stmtCreateRecentSessionsView(self):
+        return f'CREATE VIEW RecentSessionsView AS SELECT SessionID, (SELECT seg.Title FROM Sessions ses INNER JOIN Segments seg ON ses.SessionID=seg.SessionID ORDER BY seg.SegmentID DESC LIMIT 1), DATE_FORMAT(End, "%c/%e/%Y"), Length FROM Sessions ORDER BY SessionID DESC LIMIT 5'
+
+    def stmtCreateEmoteLogsTable(self):
+        return f'CREATE TABLE Logs (LogID INT AUTO_INCREMENT PRIMARY KEY, EmoteID VARCHAR(255), Source INT, Old INT, New INT, UserID VARCHAR(512), Timestamp DATETIME, FOREIGN KEY (EmoteID, Source) REFERENCES Emotes(EmoteID, Source)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateGamesTable(self):
-        return f'CREATE TABLE games (id INT PRIMARY KEY, name VARCHAR(255)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Games (GameID INT PRIMARY KEY, Name VARCHAR(255)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateSegmentsTable(self):
-        return f'CREATE TABLE segments (id INT AUTO_INCREMENT PRIMARY KEY, segment INT, stream_title VARCHAR(512), start_datetime DATETIME, end_datetime DATETIME, length TIME, session_id INT, game_id INT, FOREIGN KEY (session_id) REFERENCES sessions(id), FOREIGN KEY (game_id) REFERENCES games(id)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Segments (SegmentID INT AUTO_INCREMENT PRIMARY KEY, Segment INT, Title VARCHAR(512), Start DATETIME, End DATETIME, Length TIME, SessionID INT, GameID INT, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (GameID) REFERENCES Games(GameID)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateEmoteStatusChangeTrigger(self):
-        return f'CREATE TRIGGER emote_status_change AFTER UPDATE ON emotes FOR EACH ROW IF OLD.active != NEW.active THEN INSERT INTO logs (emote_id, new, old, user_id, datetime) VALUES (OLD.id, NEW.active, OLD.active, NULL, UTC_TIMESTAMP()); END IF;'
-
-    def stmtCreateEmoteInsertTrigger(self):
-        return f'CREATE TRIGGER new_emote AFTER INSERT ON emotes FOR EACH ROW INSERT INTO logs (emote_id, new, old, user_id, datetime) VALUES (id, active, active, NULL, UTC_TIMESTAMP());'
+        return f'CREATE TRIGGER EmoteStatusChangeTigger AFTER UPDATE ON Emotes FOR EACH ROW IF OLD.Active != NEW.Active THEN INSERT INTO Logs (EmoteID, Source, Old, New, UserID, Timestamp) VALUES (OLD.EmoteID, OLD.Source, OLD.Active, NEW.Active, NULL, UTC_TIMESTAMP()); END IF;'
 
     def stmtSelectEmotesToDownload(self):
-        return f'SELECT url, emote_id, code, source FROM emotes WHERE path IS NULL;'
+        return f'SELECT URL, EmoteID, Code, Source FROM Emotes WHERE Path IS NULL;'
 
-    def stmtUpdateEmotePath(self, path, emote_id, source):
-        return f'UPDATE emotes SET path = "{path}" WHERE emote_id LIKE "{emote_id}" AND source LIKE "{source}";'
+    def stmtUpdateEmotePath(self, path, emoteId, source):
+        return f'UPDATE Emotes SET Path = "{path}" WHERE EmoteID LIKE "{emoteId}" AND Source = {source};'
 
     def stmtSelectMostRecentSession(self):
-        return f'SELECT MAX(id) FROM sessions'
+        return f'SELECT MAX(SessionID) FROM Sessions'
 
     def stmtUpdateSessionEndDatetime(self):
-        return f'UPDATE sessions SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.sessionId}'
+        return f'UPDATE Sessions SET End = "{utils.getDateTime()}" WHERE SessionID = {self.sessionId}'
 
     def stmtUpdateSessionLength(self):
-        return f'UPDATE sessions SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.sessionId}'
+        return f'UPDATE Sessions SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SessionID = {self.sessionId}'
 
     def stmtSelectActiveEmotes(self):
-        return f'SELECT code FROM emotes WHERE ACTIVE = 1;'
+        return f'SELECT Code FROM Emotes WHERE Active = 1;'
 
     def stmtSelectEmoteByStatus(self, active):
-        return f'SELECT emote_id, source FROM emotes WHERE active = {active};'
+        return f'SELECT EmoteID, Source FROM Emotes WHERE Active = {active};'
 
     def stmtSelectChatterIdByUsername(self, username):
-        return f'SELECT id FROM chatters WHERE username = "{username}";'
+        return f'SELECT ChatterID FROM Chatters WHERE Username = "{username}";'
 
     def stmtSelectProfilePictureUrl(self):
-        return f'SELECT url FROM pictures WHERE channel = "{self.channelName}" ORDER BY id DESC LIMIT 1;'
+        return f'SELECT URL FROM Pictures WHERE Channel = "{self.channelName}" ORDER BY PictureID DESC LIMIT 1;'
 
     def stmtInsertNewChatter(self, username):
-        return f'INSERT INTO chatters (username, first_date, last_date) VALUES ("{username}", "{utils.getDate()}", "{utils.getDate()}");'
+        return f'INSERT INTO Chatters (Username, FirstSeen, LastSeen) VALUES ("{username}", "{utils.getDate()}", "{utils.getDate()}");'
         
-    def stmtInsertNewMessage(self, message, chatter_id):
-        return f'INSERT INTO messages (message, session_id, segment_id, chatter_id, datetime) VALUES ("{message}", {self.sessionId}, {self.segmentId}, {chatter_id}, "{utils.getDateTime()}");'    
+    def stmtInsertNewMessage(self, message, action, chatterId):
+        return f'INSERT INTO Messages (Message, Action, SessionID, SegmentID, ChatterID, Timestamp) VALUES ("{message}", {action}, {self.sessionId}, {self.segmentId}, {chatterId}, "{utils.getDateTime()}");'    
 
     def stmtInsertNewPicture(self):
-        return f'INSERT INTO pictures (channel, url, date_added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{utils.getDateTime()}")'
+        return f'INSERT INTO Pictures (Channel, URL, Added) VALUES ("{self.channelName}","{self.channel["profile_image_url"]}","{utils.getDateTime()}")'
     
-    def stmtUpdateChatterLastDate(self, chatter_id):
-        return f'UPDATE chatters SET last_date = "{utils.getDate()}" WHERE id = {chatter_id};'
+    def stmtUpdateChatterLastDate(self, chatterId):
+        return f'UPDATE Chatters SET LastSeen = "{utils.getDate()}" WHERE ChatterID = {chatterId};'
 
     def stmtUpdateEmoteCount(self, emote):
-        return f'UPDATE emotes SET count = count + 1 WHERE code = BINARY "{emote}" AND active = 1;'
+        return f'UPDATE Emotes SET Count = Count + 1 WHERE Code = BINARY "{emote}" AND Active = 1;'
 
     def stmtInsertNewEmote(self, emote, source):
-        return f'INSERT INTO emotes (code, emote_id, url, date_added, source, active) VALUES ("{emote.code}","{emote.id}","{emote.url}","{utils.getDate()}","{source}",1);'
+        return f'INSERT INTO Emotes (EmoteID, Code, URL, Added, Source, Active) VALUES ("{emote.id}","{emote.code}","{emote.url}","{utils.getDate()}", {source}, 1);'
 
-    def stmtUpdateEmoteStatus(self, active, emote_id):
-        return f'UPDATE emotes SET active = {active} WHERE emote_id = "{emote_id}";'
+    def stmtUpdateEmoteStatus(self, active, emoteId):
+        return f'UPDATE Emotes SET Active = {active} WHERE EmoteID = "{emoteId}";'
 
     def stmtInsertNewSession(self):
-        return f'INSERT INTO sessions (start_datetime, end_datetime, length) VALUES ("{utils.getDateTime()}", NULL, NULL);'
+        return f'INSERT INTO Sessions (Start, End, Length) VALUES ("{utils.getDateTime()}", NULL, NULL);'
 
     def stmtSelectGameById(self):
-        return f'SELECT id FROM games WHERE id = {self.gameId};'
+        return f'SELECT GameID FROM Games WHERE GameID = {self.gameId};'
 
     def stmtInsertNewGame(self):
         self.gameName = 'N/A' if self.gameName == '' else self.gameName
         if('\"' in self.gameName):
             self.gameName = self.gameName.replace('"', '\\"')
-        return f'INSERT INTO games (id, name) VALUES ({self.gameId}, "{self.gameName}");'
+        return f'INSERT INTO Games (GameID, Name) VALUES ({self.gameId}, "{self.gameName}");'
 
     def stmtInsertNewSegment(self):
         if('\\' in self.streamTitle):
             self.streamTitle = self.streamTitle.replace('\\', '\\\\')
         if('"' in self.streamTitle):
             self.streamTitle = self.streamTitle.replace('"', '\\"')
-        return f'INSERT INTO segments (session_id, stream_title, segment, start_datetime, end_datetime, length, game_id) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{utils.getDateTime()}", NULL, NULL, {self.gameId});'
+        return f'INSERT INTO Segments (SessionID, Title, Segment, Start, End, Length, GameID) VALUES ({self.sessionId}, "{self.streamTitle}", {self.segment}, "{utils.getDateTime()}", NULL, NULL, {self.gameId});'
 
     def stmtSelectSegmentNumberBySessionId(self):
-        return f'SELECT MAX(segment) FROM segments WHERE session_id = {self.sessionId};'
+        return f'SELECT MAX(Segment) FROM Segments WHERE SessionID = {self.sessionId};'
 
     def stmtUpdateSegmentEndDatetime(self):
-        return f'UPDATE segments SET end_datetime = "{utils.getDateTime()}" WHERE id = {self.segmentId};'
+        return f'UPDATE Segments SET End = "{utils.getDateTime()}" WHERE SegmentID = {self.segmentId};'
 
     def stmtUpdateSegmentLength(self):
-        return f'UPDATE segments SET length = (SELECT TIMEDIFF(end_datetime, start_datetime)) WHERE id = {self.segmentId}'
+        return f'UPDATE Segments SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SegmentID = {self.segmentId}'
 
 def addExecution():
-    db = connect("cc_housekeeping")
+    db = connect(ADMIN_DB_NAME)
+    if(db is None):
+        return None
     cursor = db.cursor()
-    cursor.execute(stmtInsertExecution())
-    db.commit()
+    if(cursor is None):
+        return None
+    try:
+        cursor.execute(stmtInsertExecution())
+        db.commit()
+    except:
+        if(cursor is not None):
+            cursor.close()
+        if(db is not None):
+            db.close()
+        return None
     cursor.close()
     db.close()
-    
+
 def connect(dbName=None):
         try:
             c = Config()
@@ -433,26 +472,31 @@ def connect(dbName=None):
 
 def createAdminDb():
     db = connect()
+    if(db is None):
+        return None
     cursor = db.cursor()
-    cursor.execute(stmtCreateAdminDatabase())
-    cursor.execute('USE cc_housekeeping;')
+    if(cursor is None):
+        return None
+    try:
+        cursor.execute(stmtCreateAdminDatabase())
+        cursor.execute(f'USE {ADMIN_DB_NAME};')
+    except:
+        return None
     stmts = [stmtCreatePicturesTable(),stmtCreateAdminsTable(),stmtCreateAdminSessionsTable(),
-             stmtCreateExecutionLogTable(),stmtCreateExecutionsTable()]
-    for sql in stmts:
-        cursor.execute(sql)
-    cursor.close()
-    db.close()
-
-def updateExecution():
-    db = connect("cc_housekeeping")
-    cursor = db.cursor()
-    cursor.execute(stmtUpdateExecution())
-    db.commit()
+             stmtCreateExecutionsTable()]
+    try:
+        for sql in stmts:
+            try:
+                cursor.execute(sql)
+            except:
+                continue
+    except:
+        return None
     cursor.close()
     db.close()
 
 def verifyAdminDb():
-    db = connect("cc_housekeeping")
+    db = connect(ADMIN_DB_NAME)
     if db is None:
         return False
     else:
@@ -460,25 +504,22 @@ def verifyAdminDb():
         return True
     
 def stmtCreateAdminDatabase():
-    return 'CREATE DATABASE IF NOT EXISTS cc_housekeeping COLLATE utf8mb4_general_ci;'
+    return f'CREATE DATABASE IF NOT EXISTS {ADMIN_DB_NAME} COLLATE utf8mb4_general_ci;'
 
 def stmtCreatePicturesTable():
-    return 'CREATE TABLE pictures (id INT AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(256), url VARCHAR(512), date_added DATETIME)'
+    return 'CREATE TABLE Pictures (PictureID INT AUTO_INCREMENT PRIMARY KEY, Channel VARCHAR(256), URL VARCHAR(512), Added DATETIME)'
 
 def stmtCreateAdminsTable():
-    return 'CREATE TABLE admins (id INT AUTO_INCREMENT PRIMARY KEY, password VARCHAR(256), role INT, username VARCHAR(256))'
+    return 'CREATE TABLE Admins (AdminID INT AUTO_INCREMENT PRIMARY KEY, Username VARCHAR(256), Password VARCHAR(256), Role INT)'
 
 def stmtCreateAdminSessionsTable():
-    return 'CREATE TABLE adminsessions (id INT AUTO_INCREMENT PRIMARY KEY, token VARCHAR(256), userId INT, datetime DATETIME, expires DATETIME)'
-
-def stmtCreateExecutionLogTable():
-    return 'CREATE TABLE executionlog (id INT AUTO_INCREMENT PRIMARY KEY, channel VARCHAR(256), message VARCHAR(256), type INT, datetime DATETIME)'
+    return 'CREATE TABLE AdminSessions (AdminSessionID INT AUTO_INCREMENT PRIMARY KEY, Token VARCHAR(256), UserID INT, Timestamp DATETIME, Expires DATETIME)'
 
 def stmtCreateExecutionsTable():
-    return 'CREATE TABLE executions (id INT AUTO_INCREMENT PRIMARY KEY, userId INT, start DATETIME, end DATETIME)'
+    return 'CREATE TABLE Executions (ExecutionID INT AUTO_INCREMENT PRIMARY KEY, UserID INT, Start DATETIME, End DATETIME)'
 
 def stmtInsertExecution():
-    return f'INSERT INTO executions (start, end, userId) VALUES ("{utils.getDateTime()}",NULL,NULL);'
+    return f'INSERT INTO Executions (Start, End, UserID) VALUES ("{utils.getDateTime()}",NULL,NULL);'
 
 def stmtUpdateExecution():
-    return f'UPDATE executions SET end = "{utils.getDateTime()}" WHERE id = (SELECT MAX(id) FROM executions);'
+    return f'UPDATE Executions SET End = "{utils.getDateTime()}" WHERE ExecutionID = (SELECT MAX(ExecutionID) FROM Executions);'

@@ -28,16 +28,16 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = 'SELECT code, count, path, source FROM emotes ORDER BY source DESC, count DESC;';
+        $sql = 'SELECT Code, Count, Path, Source FROM Emotes WHERE Active = 1 ORDER BY Source DESC, Count DESC;';
         $result = $conn->query($sql);
         $codes = '';
         $paths = '';
         $sources = '';
         if($result->num_rows > 0) {
             while($emote = $result->fetch_assoc()) {
-                $codes .= '"' . addcslashes($emote["code"], '"\\/') . '", ';
-                $paths .= '"' . $emote["path"] . '", ';
-                $sources .= '"' . $emote["source"] . '", ';
+                $codes .= '"' . addcslashes($emote["Code"], '"\\/') . '", ';
+                $paths .= '"' . $emote["Path"] . '", ';
+                $sources .= '"' . $emote["Source"] . '", ';
             }
             $codes = substr($codes, 0, -2);
             $paths = substr($paths, 0, -2);

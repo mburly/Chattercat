@@ -32,11 +32,11 @@
         returnWithError($conn->connect_error);
     }
     else {
-        if($col == "count" || $col == "source" || $col == "active") {
-            $sql = 'UPDATE emotes SET ' . $col . ' = ' . $new_value . ' WHERE emote_id = "' . $emote_id . '" AND source = ' . $source . ';';
+        if($col == "Count" || $col == "Source" || $col == "Active") {
+            $sql = 'UPDATE Emotes SET ' . $col . ' = ' . $new_value . ' WHERE EmoteID = "' . $emote_id . '" AND Source = ' . $source . ';';
         }
         else {
-            $sql = 'UPDATE emotes SET ' . $col . ' = "' . $new_value . '" WHERE emote_id = "' . $emote_id . '" AND source = ' . $source . ';';            
+            $sql = 'UPDATE Emotes SET ' . $col . ' = "' . $new_value . '" WHERE EmoteID = "' . $emote_id . '" AND Source = ' . $source . ';';            
         }
         $conn->query($sql);
         returnInfo();

@@ -53,6 +53,10 @@
     .window {
         width:295px !important;
     }
+
+    .window-group-member:not(:first-child) {
+        margin-left:0px;
+    }
   }
 
 @media (max-width: 1024px) {
@@ -94,10 +98,14 @@ input {
     user-select: none;
 }
 
+.index-window {
+    width:300px !important;
+}
+
 .window {
     margin-left:auto;
     margin-right:auto;
-    width:300px;
+    width:400px;
     vertical-align: top;
 }
 
@@ -302,15 +310,6 @@ input {
     margin-top:50px;
 }
 
-#picturesGroup {
-    margin-top:150px;
-    text-align:center;
-}
-
-.window-full-image:hover {
-    cursor: pointer;
-}
-
 .member-2 {
     background: linear-gradient(90deg,rgb(81, 0, 128),#7c0eaf);
 }
@@ -416,7 +415,7 @@ input {
     font-weight:700;
     margin-left:5px;
     color:purple;
-    width:100px;
+    width:fit-content;
     display:inline-block;
     overflow:hidden;
     text-overflow: ellipsis;
@@ -429,7 +428,7 @@ input {
 
 hr {
 	border: none;
-	width: 350px;
+	width: 300px;
 	height: 1px;
 	opacity: 0.5;
 	background: linear-gradient( to right, rgb(255, 0, 234) 20%, rgb(160, 0, 120) 20%, rgb(219, 0, 135) 36%, rgb(129, 0, 180) 36%, rgb(98, 0, 128) 60%, rgb(204, 0, 255) 60%, blue 100% );
@@ -531,11 +530,8 @@ hr {
 
 .message-message {
     color:black;
-    text-overflow: ellipsis;
-    overflow:hidden;
     margin-left:2px;
     text-align:left;
-
 }
 
 .action-button:not(:first-child) {
@@ -571,7 +567,6 @@ hr {
     border-radius: 6px;
     padding: 5px 5px;
     
-    /* Position the tooltip */
     position: absolute;
     z-index: 1;
     top: 100%;
@@ -588,7 +583,6 @@ hr {
     border-radius: 6px;
     padding: 5px 5px;
     
-    /* Position the tooltip */
     position: absolute;
     z-index: 1;
     bottom: 100%;
@@ -904,9 +898,9 @@ hr {
 }
 
 .log-type {
-    /* width:fit-content; */
     width:75px;
     padding:3px;
+    text-align:center;
 }
 
 .text-enabled {
@@ -942,16 +936,13 @@ hr {
 }
 
 #updatesPanel {
+    background:#dfdfdf;
     width:fit-content;
-    overflow:scroll;
-    max-height:200px;
-    height:200px;
     margin-top:25px;
 }
 
 .no-updates-text {
     text-align:center;
-    margin-top:30%;
     opacity:50%;
 }
 
@@ -1002,6 +993,10 @@ hr {
     color:darkblue;
 }
 
+#adminDeleteButton {
+    color:darkred;
+}
+
 .channel-emotes-button {
     margin-bottom:5px;
 }
@@ -1028,6 +1023,15 @@ hr {
     font-weight:700;
     overflow:hidden;
     text-overflow: ellipsis;
+}
+
+._7TV-emote {
+    background-color: #1f3f00;
+    color: white;
+    margin-top: 5px;
+    padding: 2px;
+    border-radius: 8%;
+    opacity: 0.5;
 }
 
 .Twitch-emote, .Subscriber-emote {
@@ -1347,6 +1351,7 @@ tr:nth-child(even) {
 
 .info-help-hide {
     font-size:8px;
+    margin-right:5px; 
 }
 
 .info-help-hide:hover {
@@ -1372,4 +1377,22 @@ tr:nth-child(even) {
 
 #infoPageButton:hover {
     cursor:pointer;
+}
+
+.message-emote {
+    height:32px;
+    width:32px;
+}
+
+#mainLogo {
+    float:left;
+    height:32px;
+    opacity:75%;
+    /* transition:0.25s ease-out all; */
+}
+
+#mainLogo:hover {
+    opacity:100%;
+    cursor:pointer;
+    /* transition:0.25s ease-in all; */
 }

@@ -32,12 +32,12 @@
         returnWithError($conn->connect_error);
     }
     else {
-        $sql = "SELECT e.code AS emote, e.path AS path, l.old AS old, l.new AS new, l.datetime AS datetime FROM logs l INNER JOIN emotes e ON l.emote_id=e.id ORDER BY l.id DESC LIMIT 5;";
+        $sql = "SELECT e.Code AS emote, e.Path AS path, l.Old AS old, l.New AS new, l.Timestamp AS timestamp FROM Logs l INNER JOIN Emotes e ON l.EmoteID=e.EmoteID AND l.Source=e.Source ORDER BY l.LogID DESC LIMIT 5;";
         $result = $conn->query($sql);
         if($result->num_rows > 0) {
             while($log = $result -> fetch_assoc()) {
                 array_push($emotes, $log["emote"]);
-                array_push($dates, $log["datetime"]);
+                array_push($dates, $log["timestamp"]);
                 array_push ($paths, 'e' . ltrim($log["path"], "chattercat-front/"));
                 if($log["old"] == 1 && $log["new"] == 0) {
                     array_push($types, "disabled");

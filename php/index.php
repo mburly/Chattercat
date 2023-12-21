@@ -33,7 +33,7 @@
             if(strpos($db["Database"], "cc_") !== false && strpos($db["Database"], "housekeeping") == false)
             {
                 array_push($channels, $db["Database"]);
-                $channelNames .=  '"' . ltrim($db["Database"], "cc_") . '", ';
+                $channelNames .=  '"' . substr($db["Database"], strpos($db["Database"], '_') + 1) . '", ';
             }
         }
         $channelNames = substr($channelNames, 0, -2);
@@ -54,28 +54,28 @@
                 returnWithError($conn->connect_error);
             }
             else {
-                $sql = "SELECT start_datetime, end_datetime FROM sessions ORDER BY ID DESC LIMIT 1;";
+                $sql = "SELECT Start, End FROM Sessions ORDER BY SessionID DESC LIMIT 1;";
                 $result = $conn->query($sql)->fetch_assoc();
                 if($result == NULL)
                 {
                     continue;
                 }
-                if($result["end_datetime"] == NULL)
+                if($result["End"] == NULL)
                 {
                     $live .=  'true, ';
-                    array_push($liveTimes, $result["start_datetime"]);
-                    $sql = "SELECT stream_title FROM segments ORDER BY ID DESC LIMIT 1;";
+                    array_push($liveTimes, $result["Start"]);
+                    $sql = "SELECT Title FROM Segments ORDER BY SegmentID DESC LIMIT 1;";
                     $result = $conn->query($sql)->fetch_assoc();
-                    array_push($liveChannels, ltrim($channel, "cc_"));
-                    array_push($liveTitles, addcslashes($result["stream_title"], '"\\/'));
-                    $sql = "SELECT COUNT(id) AS num_messages, COUNT(DISTINCT chatter_id) as num_chatters FROM messages WHERE session_id = (SELECT MAX(id) FROM sessions);";
+                    array_push($liveChannels, substr($channel, strpos($channel, '_') + 1));
+                    array_push($liveTitles, addcslashes($result["Title"], '"\\/'));
+                    $sql = "SELECT COUNT(MessageID) AS num_messages, COUNT(DISTINCT ChatterID) as num_chatters FROM Messages WHERE SessionID = (SELECT MAX(SessionID) FROM Sessions);";
                     $result = $conn->query($sql)->fetch_assoc();
                     array_push($liveMessageCounts, $result["num_messages"]);
                     array_push($liveNumChatters, $result["num_chatters"]);
-                    $sql = "SELECT name FROM games WHERE id = (SELECT game_id FROM segments ORDER BY id DESC LIMIT 1);";
+                    $sql = "SELECT Name FROM Games WHERE GameID = (SELECT GameID FROM Segments ORDER BY SegmentID DESC LIMIT 1);";
                     $result = $conn->query($sql)->fetch_assoc();
-                    array_push($liveGames, addcslashes($result["name"], '"\\/'));
-                    $sql = "SELECT COUNT(id) AS new_chatters FROM chatters WHERE id IN (SELECT chatter_id FROM messages WHERE session_id = (SELECT MAX(id) FROM sessions)) AND first_date = UTC_DATE();";
+                    array_push($liveGames, addcslashes($result["Name"], '"\\/'));
+                    $sql = "SELECT COUNT(ChatterID) AS new_chatters FROM Chatters WHERE ChatterID IN (SELECT ChatterID FROM Messages WHERE SessionID = (SELECT MAX(SessionID) FROM Sessions)) AND FirstSeen = UTC_DATE();";
                     $result = $conn->query($sql)->fetch_assoc();
                     array_push($liveNewChatters, $result["new_chatters"]);
                 }
