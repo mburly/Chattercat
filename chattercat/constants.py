@@ -58,6 +58,7 @@ STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
                     'updates':'Checking for emote updates...',
                     'updates_complete':'Emote update check complete.',
                     'validating':'Validating Twitch channels...',
+                    'channel_validated':'Channel validated.',
                     'validating_complete':'Channel validation complete.' }
 TIMERS = { 'sleep':15,
            'live':1,

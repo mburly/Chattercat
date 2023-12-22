@@ -49,7 +49,7 @@ class Database:
         except:
             self.db = None
             if(dbName is None):
-                self.createChannelDb()
+                self.create()
                 self.connect()
 
     def disconnect(self):
@@ -58,7 +58,7 @@ class Database:
         if(self.db is not None):
             self.db.close()
             
-    def createChannelDb(self):
+    def create(self):
         db = connect()
         if(db is None):
             return None
@@ -173,7 +173,7 @@ class Database:
         if(newEmoteCount > 0):
             self.downloadEmotes()
             utils.printInfo(self.channelName, f'Added {newEmoteCount} new emotes.')
-        self.updateChannelPicture()
+        self.updateChannelPicture()    
         utils.printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
 
     def downloadEmotes(self):

@@ -1,4 +1,4 @@
-var state = "main";
+let state = "main";
 
 loadStatus();
 callIndex();
@@ -8,10 +8,6 @@ function appendButtons(id)
 {
     var channel = id.split('-')[0];
     $('#' + id).append('<li><div class="action-group"><button class="channel-emotes-button" id="' + channel + '-ChannelEmotesButton">View ' + channel + '\'s emotes</button></div></li>');
-}
-
-function callChannelEmotes(channel, data) {
-
 }
 
 function callIndex() {
@@ -25,17 +21,22 @@ function callIndex() {
             var selectId = channelName + '-select';
             var infoId = channelName + '-info';
             try {
-                var channel = data[channelName];
+                let channel = data[channelName];
             }
             catch {
                 continue;
             }
             if(data["live"][i] == true)
             {
-                var streamStartDatetime = data[channelName]["streamStartDate"].split(' ');
+                try {
+                    var streamStartDatetime = data[channelName]["streamStartDate"].split(' ');
+                }
+                catch {
+                    continue;
+                }
                 var streamStart = new Date(streamStartDatetime[0] + "T" + streamStartDatetime[1] + "Z");  // passing in ISO 8601 format
                 var now = new Date();
-                $('.channels').append('<li class="channel" id="channel-' + channelName + '"><span class="channel-select" id="' + selectId + '"><img class="channel-icon" src="pictures/' + channelName + '.png"><span class="channel-name live-channel" id="' + channelName + '-channelName">' + channelName + '</span></span><div class="selector main-selector" id="' + channelName + '-selector"></div></li>');
+                $('.channels').append('<li class="channel" id="channel-' + channelName + '"><span class="channel-select" id="' + selectId + '"><img class="channel-icon" src="pictures/' + channelName + '.png" onerror="placeholder(this)"><span class="channel-name live-channel" id="' + channelName + '-channelName">' + channelName + '</span></span><div class="selector main-selector" id="' + channelName + '-selector"></div></li>');
                 $('.channels').append('<ul class="channel-info" id="' + infoId + '" style="display:none;"><li><span class="stream-title">' + data[channelName]['title'] + '</span></li>');
                 $('#' + infoId).append('<li class="stream-info"><span class="info-property">Time live:</span><span class="info-value">' + msToTime(now-streamStart) + '</span></li>');
                 $('#' + infoId).append('<li class="stream-info"><span class="info-property">Category:</span><span class="info-value">' + data[channelName]['category'] + '</span></li>');
@@ -47,7 +48,7 @@ function callIndex() {
             }
             else
             {
-                $('.channels').append('<li class="channel" id="channel-' + channelName + '"><span class="channel-select" id="' + selectId + '"><img class="channel-icon" src="pictures/' + channelName + '.png"><span class="channel-name">' + channelName + '</span></span></li>');
+                $('.channels').append('<li class="channel" id="channel-' + channelName + '"><span class="channel-select" id="' + selectId + '"><img class="channel-icon" src="pictures/' + channelName + '.png" onerror="placeholder(this)"><span class="channel-name">' + channelName + '</span></span></li>');
             }
         }
     });
@@ -322,7 +323,6 @@ function loadChannelPage(id)
                 $('#chattersStatusBar').append('<p class="status-bar-field"><span class="status-bar-right">Total chatters: ' + data["totalChatters"].toLocaleString("en-US") + '</span></p>')
                 hide("chattersLoad");
 
-
                 const emotesHead = '<div class="list-group-header">Top Emotes</div>';
                 $('#emotesWindowBody').append(emotesHead);
                 $('#emotesWindowBody').append('<ul id="topEmotesList">');
@@ -351,7 +351,6 @@ function loadChannelPage(id)
                 $('#emotesStatusBar').append('<p class="status-bar-field"><span class="status-bar-right">Total emotes: ' + data["totalEmotes"].toLocaleString("en-US") + '</span></p>');
                 hide("emotesLoad");
 
-
                 $('#messagesWindowBody').append('<div class="list-group-header">Recent Messages</div>');
                 $('#messagesWindowBody').append('<ul id="recentMessagesList">');
                 for(let i = 0; i < data["recentMessageMessages"].length; i++)
@@ -372,7 +371,6 @@ function loadChannelPage(id)
                     $('#messagesStatusBar').append('<p class="status-bar-field"><span class="status-bar-right">Total messages: ' + data["totalMessages"].toLocaleString("en-US") + '</span></p>');
                 }
                 hide("messagesLoad");
-
 
                 $('#sessionsWindowBody').append('<div class="list-group-header">Recent Sessions</div>');
                 $('#sessionsWindowBody').append('<div class="action-group" id="sessionsActionGroup"><button class="action-button" id="sessionsExpandButton">Expand all</button><button class="action-button" id="sessionsCollapseButton">Collapse all</button></div>');
@@ -483,9 +481,9 @@ function placeholder(image) {
     return true;
 }
 
-// 
-// Utility Functions
-// 
+//====================//
+// Utility Functions //
+//==================//
 
 function milToTime(mil) {
     let pad = num => num.toString().padStart(2, '0');
@@ -495,7 +493,6 @@ function milToTime(mil) {
     hours = hours % 12 || 12;
     return `${hours}:${pad(minutes)}${meridiem}`;
 }
-
 
 function milToDatetime(mil) {
     let pad = num => num.toString().padStart(2, '0');
@@ -508,9 +505,8 @@ function milToDatetime(mil) {
     };
 }
 
-
 function msToTime(ms) {
-    return `${Math.floor(ms / 86400000)}d ${Math.floor((ms % 86400000) / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
+    return `${Math.floor(ms / 86400000) > 0 ? Math.floor(ms / 86400000) + 'd' : ''} ${Math.floor((ms % 86400000) / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }
 
 function lengthToTime(length) {

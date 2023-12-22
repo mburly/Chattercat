@@ -116,23 +116,27 @@ def parseMessageEmotes(channelEmotes, message):
             parsedEmotes.append(word)
     return parsedEmotes
 
-def verify():
-    printBanner()
-    streams = getStreamNames()
-    if(len(streams) == 0):
-        printError(None, ERROR_MESSAGES['no_streams'])
-        sys.exit()
+def validate(streams):
     printInfo(None, STATUS_MESSAGES['validating'])
     for stream in streams:
         if(twitch.getChannelInfo(stream) is None):
             printError(stream, ERROR_MESSAGES['channel'])
             streams.remove(stream)
         else:
-            printInfo(stream, 'Channel validated.') 
-    if(streams == []):
+            printInfo(stream, STATUS_MESSAGES['channel_validated']) 
+    printInfo(None, STATUS_MESSAGES['validating_complete'])
+    return streams
+
+def verify():
+    printBanner()
+    streams = getStreamNames()
+    if(not streams):
+        printError(None, ERROR_MESSAGES['no_streams'])
+        sys.exit()
+    streams = validate(streams)
+    if(not streams):
         printError(None, ERROR_MESSAGES['invalid_streams'])
         sys.exit()
-    printInfo(None, STATUS_MESSAGES['validating_complete'])
     if(db.verifyAdminDb() is False):
         db.createAdminDb()
     db.addExecution()

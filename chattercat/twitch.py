@@ -147,7 +147,7 @@ def getChannelInfo(channelName):
     if(resp is None):
         return None
     if('data' in resp.keys()):
-        if(resp['data'] == []):
+        if(not resp['data']):
             return None
         return resp['data'][0]
     return None
@@ -207,7 +207,7 @@ def getFFZEmotes(channelId=None):
             if(emoteSetId in emotes['sets'].keys()):
                 if('emoticons' in emotes['sets'][emoteSetId].keys()):
                     emotes = emotes['sets'][emoteSetId]['emoticons']
-    if(emotes == []):
+    if(not emotes):
         return emoteSet
     if(isinstance(emotes, dict)):
         if('error' in emotes.keys()):
@@ -297,7 +297,7 @@ def getTwitchEmotes(channelName=None):
             return None
         if('data' in resp.keys()):
             emotes = resp['data']
-            if(emotes == []):
+            if(not emotes):
                 return None
             for i in range(0, len(emotes)):
                 if('3.0' in emotes[i]['scale']):
@@ -311,7 +311,7 @@ def getTwitchEmotes(channelName=None):
                 emoteSet.append(emote)
             return emoteSet
     except:
-        if(emoteSet == []):
+        if(not emoteSet):
             return None
         return emoteSet
     return emoteSet
