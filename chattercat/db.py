@@ -2,7 +2,7 @@ import os
 
 import mysql.connector
 
-from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, STATUS_MESSAGES
+from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES
 import chattercat.twitch as twitch
 from chattercat.utils import Config, Response
 import chattercat.utils as utils
@@ -446,9 +446,9 @@ def executionHandler(action):
     if(cursor is None):
         return None
     try:
-        if(action == 'A'):
+        if(action == EXECUTION_HANDLER_CODES['start']):
             cursor.execute(stmtInsertExecution())
-        elif(action == 'E'):
+        elif(action == EXECUTION_HANDLER_CODES['end']):
             cursor.execute(stmtUpdateExecution())
         else:
             return None

@@ -1,8 +1,8 @@
 import socket
 import time
 
-from chattercat.constants import ADDRESS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, TIMERS
-from chattercat.db import Database, executionHandler
+from chattercat.constants import ADDRESS, ERROR_MESSAGES, TIMERS
+from chattercat.db import Database
 import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
@@ -94,7 +94,6 @@ class Chattercat:
         self.db.disconnect()
         self.running = False
         self.executing = False
-        executionHandler(EXECUTION_HANDLER_CODES['end'])
 
     def startSocket(self):
         try:
