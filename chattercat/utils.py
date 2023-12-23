@@ -5,7 +5,7 @@ import time
 
 import requests
 
-from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
+from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
 import chattercat.db as db
 import chattercat.twitch as twitch
 
@@ -139,7 +139,7 @@ def verify():
         sys.exit()
     if(db.verifyAdminDb() is False):
         db.createAdminDb()
-    db.addExecution()
+    db.executionHandler(EXECUTION_HANDLER_CODES['start'])
     return streams
 
 def printBanner():

@@ -23,15 +23,15 @@ class Database:
                 for stmt in sql:
                     try:
                         self.cursor.execute(stmt)
-                    except Exception as e:
-                        utils.printError(self.channelName, e)
+                    except mysql.connector.IntegrityError:
+                        continue
+                    except:
                         return None
                 self.db.commit()
             else:
                 try:
                     self.cursor.execute(sql)
-                except Exception as e:
-                    utils.printError(self.channelName, e)
+                except:
                     return None
                 self.db.commit()
         except:
@@ -71,12 +71,9 @@ class Database:
         db.close()
         self.connect()
         self.commit(self.setupDb())
-        try:
-            self.commit(self.stmtCreateEmoteStatusChangeTrigger())
-        except:
-            pass
         self.populateEmotesTable()
         self.downloadEmotes()
+        self.commit([self.stmtCreateEmoteStatusChangeTrigger(), self.stmtCreateEmoteInsertTrigger()])
 
     def startSession(self, stream):
         self.commit(self.stmtInsertNewSession())
@@ -362,6 +359,9 @@ class Database:
     def stmtCreateEmoteStatusChangeTrigger(self):
         return f'CREATE TRIGGER EmoteStatusChangeTigger AFTER UPDATE ON Emotes FOR EACH ROW IF OLD.Active != NEW.Active THEN INSERT INTO Logs (EmoteID, Source, Old, New, UserID, Timestamp) VALUES (OLD.EmoteID, OLD.Source, OLD.Active, NEW.Active, NULL, UTC_TIMESTAMP()); END IF;'
 
+    def stmtCreateEmoteInsertTrigger(self):
+        return f'CREATE TRIGGER NewEmoteTrigger AFTER INSERT ON Emotes FOR EACH ROW INSERT INTO Logs (EmoteID, Source, Old, New, UserID, Timestamp) VALUES (NEW.EmoteID, NEW.Source, NULL, NEW.Active, NULL, UTC_TIMESTAMP());'
+
     def stmtSelectEmotesToDownload(self):
         return f'SELECT URL, EmoteID, Code, Source FROM Emotes WHERE Path IS NULL;'
 
@@ -438,7 +438,7 @@ class Database:
     def stmtUpdateSegmentLength(self):
         return f'UPDATE Segments SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SegmentID = {self.segmentId}'
 
-def addExecution():
+def executionHandler(action):
     db = connect(ADMIN_DB_NAME)
     if(db is None):
         return None
@@ -446,7 +446,12 @@ def addExecution():
     if(cursor is None):
         return None
     try:
-        cursor.execute(stmtInsertExecution())
+        if(action == 'A'):
+            cursor.execute(stmtInsertExecution())
+        elif(action == 'E'):
+            cursor.execute(stmtUpdateExecution())
+        else:
+            return None
         db.commit()
     except:
         if(cursor is not None):

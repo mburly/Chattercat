@@ -23,21 +23,14 @@ window.onload = function() {
         },5000);
     }
 };
-// listeners();
-// setInterval(function(){
-//     loadMainData()
-// },5000);
-// on focus, set window_focus = true.
+
 $(window).focus(function() {
     window_focus = true;
 });
 
-// when the window loses focus, set window_focus to false
 $(window).focusout(function() {
     window_focus = true;
 });
-
-
 
 class Counter {
 	constructor(startDelay, endDelay) {

@@ -1,7 +1,7 @@
 import requests
 
 from chattercat.constants import API_URLS, CDN_URLS, EMOTE_TYPES, OAUTH_URL
-import chattercat.utils as utils
+from chattercat.utils import Config, printException
 
 
 class Emote:
@@ -13,14 +13,18 @@ class Emote:
 def getAllChannelEmotes(channelName):
     channelId = getChannelId(channelName)
     channelEmotes = {}
-    channelEmotes[EMOTE_TYPES[0]] = getTwitchEmotes()
-    channelEmotes[EMOTE_TYPES[1]] = getTwitchEmotes(channelName)
-    channelEmotes[EMOTE_TYPES[2]] = getFFZEmotes()
-    channelEmotes[EMOTE_TYPES[3]] = getFFZEmotes(channelId)
-    channelEmotes[EMOTE_TYPES[4]] = getBTTVEmotes()
-    channelEmotes[EMOTE_TYPES[5]] = getBTTVEmotes(channelId)
-    channelEmotes[EMOTE_TYPES[6]] = get7TVEmotes()
-    channelEmotes[EMOTE_TYPES[7]] = get7TVEmotes(channelId)
+    emoteFunctions = {
+        'twitch': getTwitchEmotes,
+        'subscriber': getTwitchEmotes,
+        'ffz': getFFZEmotes,
+        'ffz_channel': getFFZEmotes,
+        'bttv': getBTTVEmotes,
+        'bttv_channel': getBTTVEmotes,
+        '7tv': get7TVEmotes,
+        '7tv_channel': get7TVEmotes
+    }
+    for i, emoteType in enumerate(EMOTE_TYPES):
+        channelEmotes[emoteType] = emoteFunctions[emoteType](channelId) if i % 2 else emoteFunctions[emoteType]()
     return channelEmotes
 
 def get7TVEmoteById(emoteId) -> Emote:
@@ -221,7 +225,7 @@ def getFFZEmotes(channelId=None):
     return emoteSet
 
 def getHeaders():
-    config = utils.Config()
+    config = Config()
     return {"Authorization": f"Bearer {getOAuth(config.clientId, config.secretKey)}",
             "Client-Id": config.clientId}
 
@@ -250,7 +254,7 @@ def getStreamInfo(channelName):
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except requests.ConnectionError:
-        utils.printException(channelName, 'Experienced a Connection Error.')
+        printException(channelName, 'Experienced a Connection Error.')
         return None
     except:
         return None
@@ -282,12 +286,12 @@ def getTwitchEmoteById(channelId, emoteId, source) -> Emote:
             if(emoteId == emote['id']):
                 return Emote(emoteId, emote['name'], emote['images']['url_4x'])
 
-def getTwitchEmotes(channelName=None):
+def getTwitchEmotes(channelId=None):
     emoteSet = []
-    if(channelName is None):
+    if(channelId is None):
         url = f'{API_URLS["twitch"]}/chat/emotes/global'
     else:
-        url = f'{API_URLS["twitch"]}/chat/emotes?broadcaster_id={getChannelId(channelName)}'
+        url = f'{API_URLS["twitch"]}/chat/emotes?broadcaster_id={channelId}'
     try:
         resp = requests.get(url,params=None,headers=getHeaders()).json()
     except:

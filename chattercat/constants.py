@@ -63,4 +63,6 @@ STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
 TIMERS = { 'sleep':15,
            'live':1,
            'socket':5 }
+EXECUTION_HANDLER_CODES = { 'start':'A',
+                            'end':'E' }
 ADMIN_DB_NAME = 'cc_housekeeping'

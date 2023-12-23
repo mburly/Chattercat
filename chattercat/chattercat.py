@@ -1,8 +1,8 @@
 import socket
 import time
 
-from chattercat.constants import ADDRESS, ERROR_MESSAGES, TIMERS
-from chattercat.db import Database
+from chattercat.constants import ADDRESS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, TIMERS
+from chattercat.db import Database, executionHandler
 import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
@@ -63,14 +63,10 @@ class Chattercat:
                         self.restartSocket()
                 except KeyboardInterrupt:
                     self.endExecution()
-                except Exception as e:
-                    utils.printInfo(self.channelName, f'Something happened trying to decode the socket response. restarting socket:\nEncountered exception: {e}\n\n')
+                except:
                     self.restartSocket()
                 for resp in self.getResponses():
-                    try:
-                        self.db.log(Response(self.channelName, resp))
-                    except Exception as e:
-                        utils.printInfo(self.channelName, f'Error logging a response: {e}\n')
+                    self.db.log(Response(self.channelName, resp))
         except:
             self.endExecution()
             utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
@@ -98,6 +94,7 @@ class Chattercat:
         self.db.disconnect()
         self.running = False
         self.executing = False
+        executionHandler(EXECUTION_HANDLER_CODES['end'])
 
     def startSocket(self):
         try:
