@@ -133,7 +133,7 @@ def verify():
     if(not streams):
         printError(None, ERROR_MESSAGES['no_streams'])
         sys.exit()
-    # streams = validate(streams)
+    streams = validate(streams)
     if(not streams):
         printError(None, ERROR_MESSAGES['invalid_streams'])
         sys.exit()
