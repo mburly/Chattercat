@@ -344,6 +344,7 @@ input {
     font-weight:700;
     color:white;
     background-color:rebeccapurple;
+    border:1px solid lightgray;
     padding:2px;
     width:-moz-fit-content;
     margin-top:10px;
@@ -1241,9 +1242,6 @@ hr {
     display:inline-block;
     text-align:center;
     width:15px;
-}
-
-#manageEmotesTable {
 }
 
 #manageEmotesHeaderRow {

@@ -5,7 +5,7 @@ import time
 
 import requests
 
-from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAME, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
+from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAMES, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
 import chattercat.db as db
 import chattercat.twitch as twitch
 
@@ -13,7 +13,7 @@ import chattercat.twitch as twitch
 class Config:
     def __init__(self):
         self.config = configparser.ConfigParser()
-        self.config.read(CONFIG_NAME)
+        self.config.read(CONFIG_NAMES['op'])
         self.host= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['host']]
         self.user= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['user']]
         self.password = self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['password']]
@@ -21,6 +21,14 @@ class Config:
         self.token = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['token']]
         self.clientId = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['client_id']]
         self.secretKey = self.config[CONFIG_SECTIONS['twitch']][TWITCH_VARIABLES['secret_key']]
+
+class DWHConfig:
+    def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.config.read(CONFIG_NAMES['dwh'])
+        self.host= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['host']]
+        self.user= self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['user']]
+        self.password = self.config[CONFIG_SECTIONS['db']][DB_VARIABLES['password']]
 
 class Response:
     def __init__(self, channelName, response):

@@ -6,6 +6,7 @@ from chattercat.db import Database
 import chattercat.twitch as twitch
 from chattercat.utils import Response
 import chattercat.utils as utils
+from chattercat.warehouse import Warehouse
 
 
 class Chattercat:
@@ -75,6 +76,7 @@ class Chattercat:
         utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
         try:
             self.db = Database(self.channelName)
+            self.db.truncate()
         except:
             return None
         if(self.db.startSession(self.stream) is None):
@@ -83,9 +85,13 @@ class Chattercat:
 
     def end(self):
         self.db.endSession()
+        utils.printInfo(self.channelName, utils.statusMessage(self.channelName, online=False))
+        data = self.db.generateWarehouseExportStagingData()
+        self.dwh = Warehouse(self.channelName, data)
+        self.dwh.export()
+        self.dwh.disconnect()
         self.db.disconnect()
         self.running = False
-        utils.printInfo(self.channelName, utils.statusMessage(self.channelName, online=False))
 
     def endExecution(self):
         if(self.sock is not None):

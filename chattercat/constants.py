@@ -1,7 +1,8 @@
 import pyfiglet
 
 
-CONFIG_NAME = 'conf.ini'
+CONFIG_NAMES = { 'op':'conf.ini',
+                 'dwh':'wh.ini' }
 STREAMS = 'streams.txt'
 SERVER = 'irc.chat.twitch.tv'
 PORT = 6667
@@ -59,10 +60,15 @@ STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
                     'updates_complete':'Emote update check complete.',
                     'validating':'Validating Twitch channels...',
                     'channel_validated':'Channel validated.',
-                    'validating_complete':'Channel validation complete.' }
+                    'validating_complete':'Channel validation complete.',
+                    'dwh_export_start': 'Beginning export to Data Warehouse.',
+                    'dwh_export_complete': 'Export to Data Warehouse complete.' }
 TIMERS = { 'sleep':15,
            'live':1,
            'socket':5 }
 EXECUTION_HANDLER_CODES = { 'start':'A',
                             'end':'E' }
 ADMIN_DB_NAME = 'cc_housekeeping'
+DB_PREFIX = 'cc_'
+DWH_DB_PREFIX = 'ccdwh_'
+TRUNCATE_LIST = ['Messages', 'Chatters', 'Segments', 'Sessions', 'Games']

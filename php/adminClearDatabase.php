@@ -25,8 +25,25 @@
     $conn = new mysqli($host, $user, $password); 
     if($conn->connect_error) {
         returnWithError($conn->connect_error);
+        return;
     }
     else {
+        if(isset($_COOKIE["cc_admin_token"])) {
+            $token = $_COOKIE["cc_admin_token"];
+            $sql = 'SELECT * FROM Adminsessions WHERE Token = "' . $token . '";';
+            $result = $conn->query($sql);
+            if($result->num_rows > 0) {
+                $expires = strtotime($result->fetch_assoc()["Expires"]);
+                if($expires - time() < 0) {
+                    returnWithError("token expired");
+                    return;
+                }
+            }
+        }
+        else {
+            returnWithError("invalid token");
+            return;
+        }
         $sql = 'SHOW DATABASES;';
         $result = $conn->query($sql);
         echo var_dump($result) . '<br>';

@@ -2,11 +2,11 @@ import os
 
 import mysql.connector
 
-from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES
+from chattercat.constants import ADMIN_DB_NAME, DIRS, EMOTE_TYPES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, TRUNCATE_LIST
 import chattercat.twitch as twitch
 from chattercat.utils import Config, Response
 import chattercat.utils as utils
-
+from chattercat.warehouse import Chatter, Emote, Message, Segment, Session
 
 class Database:
     def __init__(self, channelName):
@@ -14,6 +14,7 @@ class Database:
         self.channelName = channelName
         self.config = Config()
         self.connect()
+        self.exportData = {}
 
     def commit(self, sql):
         try:
@@ -74,6 +75,10 @@ class Database:
         self.populateEmotesTable()
         self.downloadEmotes()
         self.commit([self.stmtCreateEmoteStatusChangeTrigger(), self.stmtCreateEmoteInsertTrigger()])
+
+    def truncate(self):
+        for table in TRUNCATE_LIST:
+            self.cursor.execute(self.stmtTruncateTable(table))
 
     def startSession(self, stream):
         self.commit(self.stmtInsertNewSession())
@@ -136,7 +141,7 @@ class Database:
         emotes = twitch.getAllChannelEmotes(self.channelName)
         source = 1
         for emoteType in EMOTE_TYPES:
-            if(emotes[emoteType] is None):         # No emotes from source found
+            if(emotes[emoteType] is None): # No emotes from source found
                 source += 1
                 continue
             for emote in emotes[emoteType]:
@@ -313,7 +318,98 @@ class Database:
                 return None
         cursor.close()
         db.close()
+
+    def getChattersExport(self):
+        data = {'chatters': []}
+        self.exportData['newChatters'] = []
+        self.exportData['chatterIdMappingsHelper'] = {}
+        try:
+            self.cursor.execute(self.stmtGetChatters())
+            chatters = self.cursor.fetchall()
+            for i in range(0, len(chatters)):
+                c = Chatter(chatters[i][0], chatters[i][1], chatters[i][2], chatters[i][3])
+                data['chatters'].append(c)
+                self.exportData['newChatters'].append(c.Username)
+                self.exportData['chatterIdMappingsHelper'][c.Username] = c.ChatterID
+            return data['chatters']
+        except:
+            return []
         
+    def getSessionsExport(self):
+        data = {'sessions': []}
+        try:
+            self.cursor.execute(self.stmtGetSessions())
+            sessions = self.cursor.fetchall()
+            for session in sessions:
+                data['sessions'].append(Session(session[0], session[1], session[2], session[3]))
+            return data['sessions']
+        except:
+            return []
+        
+    def getGamesExport(self):
+        data = {'games': {}}
+        try:
+            self.cursor.execute(self.stmtGetGames())
+            games = self.cursor.fetchall()
+            for game in games:
+                data['games'][game[1]] = game[0]
+            return data['games']
+        except:
+            return []
+        
+    def getSegmentsExport(self):
+        data = {'segments': []}
+        try:
+            self.cursor.execute(self.stmtGetSegments())
+            segments = self.cursor.fetchall()
+            for segment in segments:
+                data['segments'].append(Segment(segment[0], segment[1], segment[2], segment[3], 
+                                                segment[4], segment[5], segment[6], segment[7]))
+            return data['segments']
+        except:
+            return []
+    
+    def getMessagesExport(self):
+        data = {'messages': []}
+        try:
+            self.cursor.execute(self.stmtGetMessages())
+            messages = self.cursor.fetchall()
+            for message in messages:
+                data['messages'].append(Message(message[0], message[1], message[2], message[3], 
+                                                message[4], message[5], message[6]))
+            return data['messages']
+        except:
+            return []
+        
+    def getEmotesExport(self):
+        data = {'emotes': []}
+        try:
+            self.cursor.execute(self.stmtGetEmotes())
+            emotes = self.cursor.fetchall()
+            self.exportData['emoteIds'] = []
+            self.exportData['emoteCounts'] = {}
+            self.exportData['emoteActives'] = {}
+            for emote in emotes:
+                e = Emote(emote[0], emote[1], emote[2], emote[3], emote[4], emote[5], emote[6], emote[7])
+                self.exportData['emoteIds'].append(e.EmoteID)
+                em = f'{e.EmoteID}-{e.Source}'
+                self.exportData['emoteActives'][em] = e.Active
+                if(e.Count > 0):
+                    self.exportData['emoteCounts'][em] = e.Count
+                data['emotes'].append(e)
+            return data['emotes']
+        except:
+            return []
+
+    def generateWarehouseExportStagingData(self):
+        self.exportData['chatters'] = self.getChattersExport()
+        self.exportData['sessions'] = self.getSessionsExport()
+        self.exportData['games'] = self.getGamesExport()
+        self.exportData['segments'] = self.getSegmentsExport()
+        self.exportData['messages'] = self.getMessagesExport()
+        self.exportData['emotes'] = self.getEmotesExport()
+        return self.exportData
+
     def stmtCreateDatabase(self):
         return f'CREATE DATABASE IF NOT EXISTS cc_{self.channelName} COLLATE utf8mb4_general_ci;'
 
@@ -324,7 +420,7 @@ class Database:
         return f'CREATE TABLE Sessions (SessionID INT AUTO_INCREMENT PRIMARY KEY, Start DATETIME, End DATETIME, Length TIME) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateMessagesTable(self):
-        return  f'CREATE TABLE Messages (MessageID INT AUTO_INCREMENT PRIMARY KEY, Message VARCHAR(512) COLLATE utf8mb4_general_ci, Action BOOLEAN, ChatterID INT, SessionID INT, SegmentID INT, Timestamp DATETIME, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (SegmentID) REFERENCES Segments(SegmentID), FOREIGN KEY (ChatterID) REFERENCES Chatters(ChatterID)) COLLATE utf8mb4_general_ci;'
+        return f'CREATE TABLE Messages (MessageID INT AUTO_INCREMENT PRIMARY KEY, Message VARCHAR(512) COLLATE utf8mb4_general_ci, Action BOOLEAN, ChatterID INT, SessionID INT, SegmentID INT, Timestamp DATETIME, FOREIGN KEY (SessionID) REFERENCES Sessions(SessionID), FOREIGN KEY (SegmentID) REFERENCES Segments(SegmentID), FOREIGN KEY (ChatterID) REFERENCES Chatters(ChatterID)) COLLATE utf8mb4_general_ci;'
 
     def stmtCreateEmotesTable(self):
         return f'CREATE TABLE Emotes (EmoteID VARCHAR(255) COLLATE utf8mb4_general_ci, Code VARCHAR(255) COLLATE utf8mb4_general_ci, Count INT DEFAULT 0, URL VARCHAR(512) COLLATE utf8mb4_general_ci, Path VARCHAR(512) COLLATE utf8mb4_general_ci, Added DATE, Source INT, Active BOOLEAN, PRIMARY KEY(EmoteID, Source)) COLLATE utf8mb4_general_ci;'
@@ -436,7 +532,28 @@ class Database:
         return f'UPDATE Segments SET End = "{utils.getDateTime()}" WHERE SegmentID = {self.segmentId};'
 
     def stmtUpdateSegmentLength(self):
-        return f'UPDATE Segments SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SegmentID = {self.segmentId}'
+        return f'UPDATE Segments SET Length = (SELECT TIMEDIFF(End, Start)) WHERE SegmentID = {self.segmentId};'
+    
+    def stmtGetChatters(self):
+        return f'SELECT ChatterID, Username, FirstSeen, LastSeen FROM Chatters;'
+    
+    def stmtGetSessions(self):
+        return f'SELECT SessionID, Start, End, Length FROM Sessions;'
+    
+    def stmtGetGames(self):
+        return f'SELECT GameID, Name FROM Games;'
+    
+    def stmtGetSegments(self):
+        return f'SELECT SegmentID, Segment, Title, Start, End, Length, SessionID, GameID FROM Segments;'
+    
+    def stmtGetMessages(self):
+        return f'SELECT MessageID, Message, Action, ChatterID, SessionID, SegmentID, Timestamp FROM Messages;'
+    
+    def stmtGetEmotes(self):
+        return f'SELECT EmoteID, Code, Count, URL, Path, Added, Source, Active FROM Emotes;'
+    
+    def stmtTruncateTable(self, tableName):
+        return f'DELETE FROM {tableName};'
 
 def executionHandler(action):
     db = connect(ADMIN_DB_NAME)

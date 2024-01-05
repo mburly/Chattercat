@@ -22,6 +22,22 @@
         }
     }
     fclose($configFile);
+    if(isset($_COOKIE["cc_admin_token"])) {
+        $token = $_COOKIE["cc_admin_token"];
+        $sql = 'SELECT * FROM Adminsessions WHERE Token = "' . $token . '";';
+        $result = $conn->query($sql);
+        if($result->num_rows > 0) {
+            $expires = strtotime($result->fetch_assoc()["Expires"]);
+            if($expires - time() < 0) {
+                returnWithError("token expired");
+                return;
+            }
+        }
+    }
+    else {
+        returnWithError("invalid token");
+        return;
+    }
     $db = 'cc_' . $_POST["channel"];
     $source = $_POST["source"];
     $emote_id = $_POST["emote_id"];
