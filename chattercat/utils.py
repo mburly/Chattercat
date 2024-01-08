@@ -5,7 +5,8 @@ import time
 
 import requests
 
-from chattercat.constants import BAD_FILE_CHARS, BANNER, COLORS, CONFIG_NAMES, CONFIG_SECTIONS, DB_VARIABLES, DIRS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, STREAMS, TWITCH_VARIABLES
+from chattercat.constants import BAD_FILE_CHARS, ERROR_MESSAGES, EXECUTION_HANDLER_CODES, STATUS_MESSAGES, CHANNELS
+from chattercat.constants import BANNER, COLORS, CONFIG_NAMES, CONFIG_SECTIONS, DB_VARIABLES, DIRS, TWITCH_VARIABLES
 import chattercat.db as db
 import chattercat.twitch as twitch
 
@@ -99,12 +100,12 @@ def getNumPhotos(channelName):
             counter += 1
     return counter
 
-def getStreamNames():
-    streams = []
-    for stream in open(STREAMS, 'r'):
-        if stream != '\n':
-            streams.append(stream.replace('\n',''))
-    return streams
+def getChannelNames():
+    channels = []
+    for channel in open(CHANNELS, 'r'):
+        if channel != '\n':
+            channels.append(channel.replace('\n',''))
+    return channels
 
 def removeSymbolsFromName(emoteName):
     counter = 0
@@ -124,31 +125,32 @@ def parseMessageEmotes(channelEmotes, message):
             parsedEmotes.append(word)
     return parsedEmotes
 
-def validate(streams):
+def validate(channels):
     printInfo(None, STATUS_MESSAGES['validating'])
-    for stream in streams:
-        if(twitch.getChannelInfo(stream) is None):
-            printError(stream, ERROR_MESSAGES['channel'])
-            streams.remove(stream)
+    for channel in channels:
+        c = twitch.Channel(channel, True)
+        if(not c.validated):
+            printError(channel, ERROR_MESSAGES['channel'])
+            channels.remove(channel)
         else:
-            printInfo(stream, STATUS_MESSAGES['channel_validated']) 
+            printInfo(channel, STATUS_MESSAGES['channel_validated']) 
     printInfo(None, STATUS_MESSAGES['validating_complete'])
-    return streams
+    return channels
 
 def verify():
     printBanner()
-    streams = getStreamNames()
-    if(not streams):
+    channels = getChannelNames()
+    if(not channels):
         printError(None, ERROR_MESSAGES['no_streams'])
         sys.exit()
-    streams = validate(streams)
-    if(not streams):
+    channels = validate(channels)
+    if(not channels):
         printError(None, ERROR_MESSAGES['invalid_streams'])
         sys.exit()
     if(db.verifyAdminDb() is False):
         db.createAdminDb()
     db.executionHandler(EXECUTION_HANDLER_CODES['start'])
-    return streams
+    return channels
 
 def printBanner():
     cls()

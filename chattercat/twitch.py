@@ -1,6 +1,7 @@
 import requests
 
-from chattercat.constants import API_URLS, CDN_URLS, EMOTE_TYPES, OAUTH_URL
+from chattercat.constants import API_URLS, CDN_URLS, EMOTE_TYPES, ERROR_MESSAGES, OAUTH_URL
+from chattercat.constants import CHANNEL_PROPERTIES, STREAM_PROPERTIES, TWITCH_CHANNEL_DATA, TWITCH_STREAM_DATA
 from chattercat.utils import Config, printException
 
 
@@ -10,22 +11,98 @@ class Emote:
         self.code = code
         self.url = url
 
-def getAllChannelEmotes(channelName):
-    channelId = getChannelId(channelName)
-    channelEmotes = {}
-    emoteFunctions = {
-        'twitch': getTwitchEmotes,
-        'subscriber': getTwitchEmotes,
-        'ffz': getFFZEmotes,
-        'ffz_channel': getFFZEmotes,
-        'bttv': getBTTVEmotes,
-        'bttv_channel': getBTTVEmotes,
-        '7tv': get7TVEmotes,
-        '7tv_channel': get7TVEmotes
-    }
-    for i, emoteType in enumerate(EMOTE_TYPES):
-        channelEmotes[emoteType] = emoteFunctions[emoteType](channelId) if i % 2 else emoteFunctions[emoteType]()
-    return channelEmotes
+class Channel:
+    def __init__(self, channelName, validateCheck=False):
+        self.channelName = channelName.lower()
+        self.validated = False
+        self.channelEmotes = {}
+        for property in CHANNEL_PROPERTIES:
+            setattr(self, property, None)
+        if(self.getInfo()):
+            self.validated = True
+        if(self.validated and not validateCheck):
+            self.stream = Stream(self.channelName)
+            self.stream.getInfo()
+            self.getEmotes()
+
+    def getInfo(self):
+        url = f'{API_URLS["twitch"]}/users?login={self.channelName}'
+        try:
+            resp = requests.get(url,params=None,headers=getHeaders()).json()
+        except:
+            return None
+        if(resp is None):
+            return None
+        if('data' in resp.keys()):
+            if(not resp['data']):
+                return None
+        else:
+            return None
+        channel = resp['data'][0]
+        channelKeys = channel.keys()
+        for i in range(0, len(TWITCH_CHANNEL_DATA)):
+            if(TWITCH_CHANNEL_DATA[i] in channelKeys):
+                setattr(self, CHANNEL_PROPERTIES[i], channel[TWITCH_CHANNEL_DATA[i]])
+        return True
+    
+    def getEmotes(self):
+        emoteFunctions = {
+            'twitch': getTwitchEmotes,
+            'subscriber': getTwitchEmotes,
+            'ffz': getFFZEmotes,
+            'ffz_channel': getFFZEmotes,
+            'bttv': getBTTVEmotes,
+            'bttv_channel': getBTTVEmotes,
+            '7tv': get7TVEmotes,
+            '7tv_channel': get7TVEmotes
+        }
+        for i, emoteType in enumerate(EMOTE_TYPES):
+            self.channelEmotes[emoteType] = emoteFunctions[emoteType](self.channelId) if i % 2 else emoteFunctions[emoteType]()
+        return True
+
+class Stream:
+    def __init__(self, channelName):
+        self.channelName = channelName
+        self.live = False
+        for property in STREAM_PROPERTIES:
+            setattr(self, property, None)
+
+    def getInfo(self):
+        url = f'{API_URLS["twitch"]}/streams?user_login={self.channelName}'
+        try:
+            resp = requests.get(url,params=None,headers=getHeaders()).json()
+        except requests.ConnectionError:
+            printException(self.channelName, ERROR_MESSAGES['connection'])
+            self.live = False
+            return None
+        except:
+            self.live = False
+            return None
+        if(resp is None):
+            self.live = False
+            return None
+        try:
+            respKeys = resp.keys()
+        except:
+            self.live = False
+            return None
+        if('error' in respKeys):
+            self.live = False
+            return None
+        if('data' in respKeys):
+            if(len(resp['data']) == 0):
+                self.live = False
+                return None
+        else:
+            self.live = False
+            return None
+        stream = resp['data'][0]
+        dataKeys = stream.keys()
+        for i in range(0, len(TWITCH_STREAM_DATA)):
+            if(TWITCH_STREAM_DATA[i] in dataKeys):
+                setattr(self, STREAM_PROPERTIES[i], stream[TWITCH_STREAM_DATA[i]])
+        self.live = True
+        return True
 
 def get7TVEmoteById(emoteId) -> Emote:
     url = f'{API_URLS["7tv"]}/emotes/{emoteId}'
@@ -134,28 +211,6 @@ def getBTTVEmotes(channelId=None):
                     emoteSet.append(Emote(sharedEmotes[i]['id'], sharedEmotes[i]['code'], f'{CDN_URLS["bttv"]}/{sharedEmotes[i]["id"]}/3x.{sharedEmotes[i]["imageType"]}'))
     return emoteSet
 
-def getChannelId(channelName):
-    channelInfo = getChannelInfo(channelName)
-    if(channelInfo is None):
-        return None
-    if('id' in channelInfo.keys()):
-        return int(channelInfo['id'])
-    return None
-
-def getChannelInfo(channelName):
-    url = f'{API_URLS["twitch"]}/users?login={channelName}'
-    try:
-        resp = requests.get(url,params=None,headers=getHeaders()).json()
-    except:
-        return None
-    if(resp is None):
-        return None
-    if('data' in resp.keys()):
-        if(not resp['data']):
-            return None
-        return resp['data'][0]
-    return None
-
 def getEmoteById(channelId, emoteId, source) -> Emote:
     if(source == 1 or source == 2):
         return getTwitchEmoteById(channelId, emoteId, source)
@@ -248,30 +303,6 @@ def getOAuth(clientId, clientSecret):
     if('access_token' in respKeys):
         return resp['access_token']
     return None
-    
-def getStreamInfo(channelName):
-    url = f'{API_URLS["twitch"]}/streams?user_login={channelName}'
-    try:
-        resp = requests.get(url,params=None,headers=getHeaders()).json()
-    except requests.ConnectionError:
-        printException(channelName, 'Experienced a Connection Error.')
-        return None
-    except:
-        return None
-    if(resp is None):
-        return None
-    try:
-        respKeys = resp.keys()
-    except:
-        return None
-    if('error' in respKeys):
-        return None
-    if('data' in respKeys):
-        if(len(resp['data']) == 0):
-            return None
-    else:
-        return None
-    return resp['data'][0]
 
 def getTwitchEmoteById(channelId, emoteId, source) -> Emote:
     url = f'{API_URLS["twitch"]}/chat/emotes/global' if(source == 1) else f'{API_URLS["twitch"]}/chat/emotes?broadcaster_id={channelId}'

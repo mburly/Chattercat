@@ -501,7 +501,7 @@ function milToDatetime(mil) {
     hours = hours % 12 || 12;
     return {
         date: `${mil.getMonth() + 1}/${mil.getDate()}/${mil.getFullYear().toString().substring(2,4)}`,
-        time: `${pad(hours)}:${pad(mil.getMinutes())}:${pad(mil.getSeconds())}${meridiem}`
+        time: `${hours}:${pad(mil.getMinutes())}:${pad(mil.getSeconds())}${meridiem}`
     };
 }
 

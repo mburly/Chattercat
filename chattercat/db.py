@@ -9,12 +9,13 @@ import chattercat.utils as utils
 from chattercat.warehouse import Chatter, Emote, Message, Segment, Session
 
 class Database:
-    def __init__(self, channelName):
-        self.channelDbName = f'{DB_PREFIX}{channelName}'
-        self.channelName = channelName
+    def __init__(self, channel):
+        self.channel = channel
+        self.channelDbName = DB_PREFIX + self.channel.channelName
         self.config = Config()
         self.connect()
         self.exportData = {}
+        self.getChannelActiveEmotes()
 
     def commit(self, sql, values=None):
         try:
@@ -82,9 +83,23 @@ class Database:
         self.downloadEmotes()
         self.commit([self.stmtCreateEmoteStatusChangeTrigger(), self.stmtCreateEmoteInsertTrigger()])
 
-    def truncate(self):
+    def fetchAll(self, stmt, values=None):
+        if(values):
+            try:
+                self.cursor.execute(stmt, values)
+            except:
+                return None
+        else:
+            try:
+                self.cursor.execute(stmt)
+            except:
+                return None
+        return self.cursor.fetchall()
+
+    def refresh(self):
         for table in TRUNCATE_LIST:
             self.cursor.execute(self.stmtTruncateTable(table))
+        self.cursor.execute(self.stmtResetEmoteCounts())
 
     def startSession(self, stream):
         self.commit(self.stmtInsertNewSession())
@@ -148,25 +163,22 @@ class Database:
             self.commit(self.stmtUpdateEmoteCount(), (emote,))
 
     def populateEmotesTable(self):
-        emotes = twitch.getAllChannelEmotes(self.channelName)
         source = 1
         for emoteType in EMOTE_TYPES:
-            if(emotes[emoteType] is None): # No emotes from source found
+            if(self.channel.channelEmotes[emoteType] is None): # No emotes from source found
                 source += 1
                 continue
-            for emote in emotes[emoteType]:
+            for emote in self.channel.channelEmotes[emoteType]:
                 if '\\' in emote.code:
                     emote.code = emote.code.replace('\\', '\\\\')
                 self.commit(self.stmtInsertNewEmote(), (emote.id, emote.code, emote.url, source))
             source += 1
 
     def update(self):
-        utils.printInfo(self.channelName, STATUS_MESSAGES['updates'])
+        utils.printInfo(self.channel.channelName, STATUS_MESSAGES['updates'])
         newEmoteCount = 0
-        self.channel = twitch.getChannelInfo(self.channelName)
-        self.channelId = twitch.getChannelId(self.channelName)
-        channelEmotes = twitch.getAllChannelEmotes(self.channelName)
-        currentEmotes = self.getEmotes(channelEmotes=channelEmotes)
+        self.channel.getEmotes()
+        currentEmotes = self.getEmotes(channelEmotes=self.channel.channelEmotes)
         previousEmotes = self.getEmotes(active=1)
         inactiveEmotes = self.getEmotes(active=0)
         A = set(currentEmotes)
@@ -178,26 +190,23 @@ class Database:
         for emote in newEmotes:
             if(emote in reactivatedEmotes):
                 continue
-            self.logEmote(emote, self.channelId)
+            self.logEmote(emote, self.channel.channelId)
             newEmoteCount += 1
         self.setEmotesStatus(removedEmotes, 0)
         self.setEmotesStatus(reactivatedEmotes, 1)
         if(newEmoteCount > 0):
             self.downloadEmotes()
-            utils.printInfo(self.channelName, f'Added {newEmoteCount} new emotes.')
+            utils.printInfo(self.channel.channelName, f'Added {newEmoteCount} new emotes.')
         self.updateChannelPicture()    
-        utils.printInfo(self.channelName, STATUS_MESSAGES['updates_complete'])
+        utils.printInfo(self.channel.channelName, STATUS_MESSAGES['updates_complete'])
 
     def downloadEmotes(self):
-        utils.printInfo(self.channelName, STATUS_MESSAGES['downloading'])
+        utils.printInfo(self.channel.channelName, STATUS_MESSAGES['downloading'])
         for dir in DIRS.values():
             if(not os.path.exists(dir)):
                 os.mkdir(dir)
-        try:
-            self.cursor.execute(self.stmtSelectEmotesToDownload())
-        except:
-            return None
-        for row in self.cursor.fetchall():
+        emotes = self.fetchAll(self.stmtSelectEmotesToDownload())
+        for row in emotes:
             url = row[0]
             emoteId = row[1]
             emoteName = utils.removeSymbolsFromName(row[2])
@@ -223,11 +232,8 @@ class Database:
     def getChannelActiveEmotes(self):
         self.channelEmotes = []
         self.update()
-        try:
-            self.cursor.execute(self.stmtSelectActiveEmotes())
-        except:
-            return None
-        for emote in self.cursor.fetchall():
+        emotes = self.fetchAll(self.stmtSelectActiveEmotes())
+        for emote in emotes:
             self.channelEmotes.append(str(emote[0]))
 
     def getChatterId(self, username):
@@ -244,25 +250,22 @@ class Database:
 
     # Returns in format: <source>-<emote_id>
     def getEmotes(self, active=None, channelEmotes=None):
-        emotes = []
+        emoteList = []
         if(channelEmotes is not None):
             for source in EMOTE_TYPES:
                 if(channelEmotes[source] is None):
                     continue
                 else:
                     for emote in channelEmotes[source]:
-                        emotes.append(f'{source}-{emote.id}')
-            return emotes
+                        emoteList.append(f'{source}-{emote.id}')
+            return emoteList
         else:
-            emotes = []
-            try:
-                self.cursor.execute(self.stmtSelectEmoteByStatus(), (active,))
-            except:
-                return None
-            for row in self.cursor.fetchall():
-                source = int(row[1])
-                emotes.append(f'{EMOTE_TYPES[source-1]}-{row[0]}')
-            return emotes
+            emoteList = []
+            emotes = self.fetchAll(self.stmtSelectEmoteByStatus(), (active,))
+            for emote in emotes:
+                source = int(emote[1])
+                emoteList.append(f'{EMOTE_TYPES[source-1]}-{emote[0]}')
+            return emoteList
 
     def setEmotesStatus(self, emotes, active):
         for emote in emotes:
@@ -274,18 +277,15 @@ class Database:
             self.commit([self.stmtUpdateSegmentEndDatetime(),self.stmtUpdateSegmentLength()],
                         [(self.segmentId,), (self.segmentId,)])
         try:
-            self.gameId = int(stream['game_id'])
+            self.gameId = int(stream.gameId)
         except:
             self.gameId = 0
-        self.gameName = stream['game_name']
-        try:
-            self.cursor.execute(self.stmtSelectGameById(), (self.gameId,))
-        except:
-            return None
-        if(len(self.cursor.fetchall()) == 0):
+        self.gameName = stream.gameName
+        gameInfo = self.fetchAll(self.stmtSelectGameById(), (self.gameId,))
+        if(len(gameInfo) == 0):
             self.commit(self.stmtInsertNewGame(), (self.gameId, self.gameName))
         self.segment += 1
-        self.streamTitle = stream['title']
+        self.streamTitle = stream.title
         self.commit(self.stmtInsertNewSegment(), (self.sessionId, self.streamTitle, self.segment, self.gameId))
         self.segmentId = self.cursor.lastrowid
 
@@ -303,28 +303,28 @@ class Database:
         if(cursor is None):
             return None
         try:
-            cursor.execute(self.stmtSelectProfilePictureUrl(), (self.channelName,))
+            cursor.execute(self.stmtSelectProfilePictureUrl(), (self.channel.channelName,))
         except:
             return None
         if(cursor.rowcount == 0):
             try:
-                cursor.execute(self.stmtInsertNewPicture(), (self.channelName, self.channel['profile_image_url']))
+                cursor.execute(self.stmtInsertNewPicture(), (self.channel.channelName, self.channel['profile_image_url']))
                 db.commit()
             except:
                 return None
-            utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+            utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channel.channelName}.png")
         else:
             try:
                 for url in cursor.fetchall():
                     profileImageUrl = url[0]
                     if(self.channel['profile_image_url'] != profileImageUrl):
                         try:
-                            cursor.execute(self.stmtInsertNewPicture(), (self.channelName, self.channel['profile_image_url']))
+                            cursor.execute(self.stmtInsertNewPicture(), (self.channel.channelName, self.channel['profile_image_url']))
                         except:
                             return None
                         db.commit()
-                        os.replace(f"{DIRS['pictures']}/{self.channelName}.png", f"{DIRS['pictures_archive']}/{self.channelName}-{utils.getNumPhotos(self.channelName)+1}.png")
-                        utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channelName}.png")
+                        os.replace(f"{DIRS['pictures']}/{self.channel.channelName}.png", f"{DIRS['pictures_archive']}/{self.channel.channelName}-{utils.getNumPhotos(self.channel.channelName)+1}.png")
+                        utils.downloadFile(self.channel["profile_image_url"], f"{DIRS['pictures']}/{self.channel.channelName}.png")
             except:
                 return None
         cursor.close()
@@ -335,8 +335,7 @@ class Database:
         self.exportData['newChatters'] = []
         self.exportData['chatterIdMappingsHelper'] = {}
         try:
-            self.cursor.execute(self.stmtGetChatters())
-            chatters = self.cursor.fetchall()
+            chatters = self.fetchAll(self.stmtGetChatters())
             for i in range(0, len(chatters)):
                 c = Chatter(chatters[i][0], chatters[i][1], chatters[i][2], chatters[i][3])
                 data['chatters'].append(c)
@@ -349,8 +348,7 @@ class Database:
     def getSessionsExport(self):
         data = {'sessions': []}
         try:
-            self.cursor.execute(self.stmtGetSessions())
-            sessions = self.cursor.fetchall()
+            sessions = self.fetchAll(self.stmtGetSessions())
             for session in sessions:
                 data['sessions'].append(Session(session[0], session[1], session[2], session[3]))
             return data['sessions']
@@ -360,8 +358,7 @@ class Database:
     def getGamesExport(self):
         data = {'games': {}}
         try:
-            self.cursor.execute(self.stmtGetGames())
-            games = self.cursor.fetchall()
+            games = self.fetchAll(self.stmtGetGames())
             for game in games:
                 data['games'][game[1]] = game[0]
             return data['games']
@@ -371,8 +368,7 @@ class Database:
     def getSegmentsExport(self):
         data = {'segments': []}
         try:
-            self.cursor.execute(self.stmtGetSegments())
-            segments = self.cursor.fetchall()
+            segments = self.fetchAll(self.stmtGetSegments())
             for segment in segments:
                 data['segments'].append(Segment(segment[0], segment[1], segment[2], segment[3], 
                                                 segment[4], segment[5], segment[6], segment[7]))
@@ -383,8 +379,7 @@ class Database:
     def getMessagesExport(self):
         data = {'messages': []}
         try:
-            self.cursor.execute(self.stmtGetMessages())
-            messages = self.cursor.fetchall()
+            messages = self.fetchAll(self.stmtGetMessages())
             for message in messages:
                 data['messages'].append(Message(message[0], message[1], message[2], message[3], 
                                                 message[4], message[5], message[6]))
@@ -395,11 +390,10 @@ class Database:
     def getEmotesExport(self):
         data = {'emotes': []}
         try:
-            self.cursor.execute(self.stmtGetEmotes())
-            emotes = self.cursor.fetchall()
             self.exportData['emoteIds'] = []
             self.exportData['emoteCounts'] = {}
             self.exportData['emoteActives'] = {}
+            emotes = self.fetchAll(self.stmtGetEmotes())
             for emote in emotes:
                 e = Emote(emote[0], emote[1], emote[2], emote[3], emote[4], emote[5], emote[6], emote[7])
                 self.exportData['emoteIds'].append(e.EmoteID)
@@ -562,6 +556,9 @@ class Database:
     
     def stmtTruncateTable(self, tableName):
         return f'DELETE FROM {tableName};'
+    
+    def stmtResetEmoteCounts(self):
+        return f'UPDATE Emotes SET Count = 0;'
 
 def executionHandler(action):
     db = connect(ADMIN_DB_NAME)

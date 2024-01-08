@@ -3,7 +3,7 @@ import time
 
 from chattercat.constants import ADDRESS, ERROR_MESSAGES, TIMERS
 from chattercat.db import Database
-import chattercat.twitch as twitch
+from chattercat.twitch import Channel
 from chattercat.utils import Response
 import chattercat.utils as utils
 from chattercat.warehouse import Warehouse
@@ -13,24 +13,22 @@ class Chattercat:
     executing = True
     running = True
     def __init__(self, channelName):
-        self.channelName = channelName.lower()
-        self.stream = twitch.getStreamInfo(self.channelName)
+        self.channel = Channel(channelName=channelName)
         try:
             while(self.executing):
-                if(self.stream is not None):
+                if(self.channel.stream.live):
                     self.start()
                     while(self.running):
                         self.run()
                     self.end()
                 else:
-                    self.stream = twitch.getStreamInfo(self.channelName)
-                    if(self.stream is None):
+                    self.channel.stream.getInfo()
+                    if(not self.channel.stream.live):
                         time.sleep(TIMERS['sleep'])
         except KeyboardInterrupt:
             return None
 
     def run(self):
-        self.db.getChannelActiveEmotes()
         self.startSocket()
         self.liveClock = time.time()
         self.socketClock = time.time()
@@ -38,16 +36,16 @@ class Chattercat:
             while(self.running):
                 self.resp = ''
                 if(utils.elapsedTime(self.liveClock) >= TIMERS['live']):
-                    self.stream = twitch.getStreamInfo(self.channelName)
-                    if(self.stream is None):    # Try (check if live) one more time, since we are already running
-                        self.stream = twitch.getStreamInfo(self.channelName)
-                    if(self.stream is not None):
+                    self.channel.stream.getInfo()
+                    if(not self.channel.stream.live):    # Try (check if live) one more time, since we are already running
+                        self.channel.stream.getInfo()
+                    if(self.channel.stream.live):
                         try:
-                            game_id = int(self.stream['game_id'])
+                            game_id = int(self.channel.stream.gameId)
                         except:
                             game_id = 0    # No game set
                         if(self.db.gameId != game_id):
-                            self.db.addSegment(self.stream)
+                            self.db.addSegment(self.channel.stream)
                         self.liveClock = time.time()
                     else:
                         if(self.sock is not None):
@@ -67,27 +65,27 @@ class Chattercat:
                 except:
                     self.restartSocket()
                 for resp in self.getResponses():
-                    self.db.log(Response(self.channelName, resp))
+                    self.db.log(Response(self.channel.channelName, resp))
         except:
             self.endExecution()
-            utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
+            utils.printInfo(self.channel.channelName, utils.statusMessage(self.channel.channelName))
     
     def start(self):
-        utils.printInfo(self.channelName, utils.statusMessage(self.channelName))
+        utils.printInfo(self.channel.channelName, utils.statusMessage(self.channel.channelName))
         try:
-            self.db = Database(self.channelName)
-            self.db.truncate()
+            self.db = Database(self.channel)
+            self.db.refresh()
         except:
             return None
-        if(self.db.startSession(self.stream) is None):
+        if(self.db.startSession(self.channel.stream) is None):
             return None
         self.running = True
 
     def end(self):
         self.db.endSession()
-        utils.printInfo(self.channelName, utils.statusMessage(self.channelName, online=False))
+        utils.printInfo(self.channel.channelName, utils.statusMessage(self.channel.channelName, online=False))
         data = self.db.generateWarehouseExportStagingData()
-        self.dwh = Warehouse(self.channelName, data)
+        self.dwh = Warehouse(self.channel.channelName, data)
         self.dwh.export()
         self.dwh.disconnect()
         self.db.disconnect()
@@ -107,9 +105,9 @@ class Chattercat:
             self.sock.connect(ADDRESS)
             self.sock.send(f'PASS {self.db.config.token}\n'.encode('utf-8'))
             self.sock.send(f'NICK {self.db.config.nickname}\n'.encode('utf-8'))
-            self.sock.send(f'JOIN #{self.channelName}\n'.encode('utf-8'))
+            self.sock.send(f'JOIN #{self.channel.channelName}\n'.encode('utf-8'))
         except:
-            utils.printError(self.channelName, ERROR_MESSAGES['host'])
+            utils.printError(self.channel.channelName, ERROR_MESSAGES['host'])
             self.db.endSession()
             return None
 

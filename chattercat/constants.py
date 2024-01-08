@@ -3,7 +3,7 @@ import pyfiglet
 
 CONFIG_NAMES = { 'op':'conf.ini',
                  'dwh':'wh.ini' }
-STREAMS = 'streams.txt'
+CHANNELS = 'channels.txt'
 SERVER = 'irc.chat.twitch.tv'
 PORT = 6667
 ADDRESS = (SERVER, PORT)
@@ -54,7 +54,8 @@ ERROR_MESSAGES = { 'host':'Unable to connect to host. Likely lost internet conne
                    'config':'Bad value(s) provided in the configuration file. Please check and update config.ini.',
                    'connection':'No internet connection found. Please try again.',
                    'no_streams':'No streams provided. Please add at least one channel to streams.txt',
-                   'invalid_streams':'No valid streams provided. Please add at least one valid channel name in streams.txt' }
+                   'invalid_streams':'No valid streams provided. Please add at least one valid channel name in streams.txt',
+                   'connection':'Experienced a Connection Error.' }
 STATUS_MESSAGES = { 'downloading':'Downloading channel emotes...',
                     'updates':'Checking for emote updates...',
                     'updates_complete':'Emote update check complete.',
@@ -72,3 +73,13 @@ ADMIN_DB_NAME = 'cc_housekeeping'
 DB_PREFIX = 'cc_'
 DWH_DB_PREFIX = 'ccdwh_'
 TRUNCATE_LIST = ['Messages', 'Chatters', 'Segments', 'Sessions', 'Games']
+TWITCH_CHANNEL_DATA = ['id', 'broadcaster_type', 'description', 'profile_image_url',
+                       'offline_image_url', 'view_count', 'created_at']
+CHANNEL_PROPERTIES = ['channelId', 'type', 'description', 'profileImageUrl',
+                      'offlineImageUrl', 'viewCount', 'created']
+TWITCH_STREAM_DATA = ['id', 'user_id', 'game_id', 'game_name', 'title',
+                      'viewer_count', 'started_at', 'thumbnail_url', 'tags',
+                      'is_mature']
+STREAM_PROPERTIES = ['streamId', 'channelId', 'gameId', 'gameName', 'title',
+                     'viewerCount', 'streamStart', 'thumbnailUrl', 'tags',
+                     'isMature']

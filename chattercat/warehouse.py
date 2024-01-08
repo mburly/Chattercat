@@ -122,6 +122,19 @@ class Warehouse:
         return [self.stmtCreateChattersTable(), self.stmtCreateSessionsTable(), self.stmtCreateGamesTable(), self.stmtCreateSegmentsTable(),
                 self.stmtCreateMessagesTable(), self.stmtCreateEmotesTable(), self.stmtCreateExportLogsTable()]
     
+    def fetchAll(self, stmt, values=None):
+            if(values):
+                try:
+                    self.cursor.execute(stmt, values)
+                except:
+                    return None
+            else:
+                try:
+                    self.cursor.execute(stmt)
+                except:
+                    return None
+            return self.cursor.fetchall()
+
     def export(self):
         self.printWarehouseMessage(STATUS_MESSAGES['dwh_export_start'])
         self.exportChatters()
@@ -137,9 +150,8 @@ class Warehouse:
     def exportChatters(self):
         self.startTimer()
         activeChatters = {}
-        self.cursor.execute(self.stmtGetArchivedChatters())
-        chatters = self.cursor.fetchall()
         self.chattersProcessed = 0
+        chatters = self.fetchAll(self.stmtGetArchivedChatters())
         for chatter in chatters:
             c = Chatter(chatter[0], chatter[1], None, chatter[2])
             if c.Username in self.data['newChatters']:
@@ -170,8 +182,7 @@ class Warehouse:
     def exportGames(self):
         self.startTimer()
         archivedGames = []
-        self.cursor.execute(self.stmtGetArchivedGames())
-        games = self.cursor.fetchall()
+        games = self.fetchAll(self.stmtGetArchivedGames())
         for game in games:
             archivedGames.append(game[0])
         currentGameNames = self.data['games'].keys()
@@ -208,10 +219,9 @@ class Warehouse:
     def exportEmotes(self):
         self.startTimer()
         self.emotesProcessed = 0
-        self.cursor.execute(self.stmtGetArchivedEmotes())
-        emotes = self.cursor.fetchall()
         archivedEmotes = []
         archivedEmoteIds = []
+        emotes = self.fetchAll(self.stmtGetArchivedEmotes())
         for emote in emotes:
             e = Emote(emote[0], emote[1], emote[2], emote[3], emote[4], emote[5], emote[6], emote[7])
             if(f'{e.EmoteID}-{e.Source}' in self.data['emoteCounts'].keys()):
